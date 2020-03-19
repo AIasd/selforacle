@@ -87,5 +87,3 @@ class Chauffeur(AbstractModelProvider):
                 optimizer=optimizer,
                 metrics=[rmse])
         return model
-
-

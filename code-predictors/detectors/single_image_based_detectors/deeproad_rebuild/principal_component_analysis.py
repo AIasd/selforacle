@@ -38,6 +38,11 @@ class PrincipalComponentAnalysis:
         return distances
 
     def _transform(self, feature_array: numpy.array) -> numpy.array:
+        # modification: add the lines except the return line
+        # Essentially we replace all the inf values with 10*max non inf values
+        # print(feature_array.shape, numpy.sum(numpy.isinf(feature_array)))
+        maxv = numpy.where(numpy.isfinite(feature_array), feature_array, 0).max()
+        feature_array[numpy.isinf(feature_array)] = maxv
         return self.pca.transform(feature_array)
 
     def _filter_smallest_distances(self, distances: List[float]):

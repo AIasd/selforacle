@@ -1,5 +1,6 @@
 from keras import Input, Model
-from keras.layers import Conv2D, MaxPooling2D, UpSampling2D, np, BatchNormalization, Activation
+import numpy as np
+from keras.layers import Conv2D, MaxPooling2D, UpSampling2D, BatchNormalization, Activation
 
 from detectors.single_image_based_detectors.abs_single_image_autoencoder import AbstractSingleImageAD
 from detectors.single_image_based_detectors.autoencoder_batch_generator import AutoencoderBatchGenerator

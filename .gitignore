@@ -1,3 +1,4 @@
 __init__.py
 code-predictors/eval_scripts/utils/__pycache__
 .idea
+*/__pycache__/*

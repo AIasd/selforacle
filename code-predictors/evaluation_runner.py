@@ -16,20 +16,24 @@ SEQUENCE_BASED_ADS = ["IMG-LSTM"]
 
 logger = logging.Logger("main")
 utils_logging.log_info(logger)
-
-EVAL_AGENTS = ["COMMAAI"]
-EVAL_TRACKS = ["Track1", "Track2", "Track3"]
+# modification: ["COMMAAI"] -> ["EPOCH"]
+EVAL_AGENTS = ["EPOCH"]
+# modification: ["Track1", "Track2", "Track3"] -> ["Track1"]
+EVAL_TRACKS = ["Track1"]
 # EVAL_TIME = ["DayOnly"]
 # EVAL_WEATHER = ["Sunny"]
 # TODO Change this every time you want to merge generated tables to compatible start ids
 SETTING_START_ID = 3000
-EVAL_TIME = ["DayNight", "DayOnly"]
-EVAL_WEATHER = ["Fog", "Rain", "Snow", "Sunny"]
+# modification: ["DayNight", "DayOnly"] -> ["DayNight"]
+EVAL_TIME = ["DayNight"]
+# modification: ["Fog", "Rain", "Snow", "Sunny"] -> ["Fog"]
+EVAL_WEATHER = ["Fog"]
 
 
 def main():
     # Eval Config, change this line to evaluate agains another set
-    eval_dir = "../datasets/eval_data/preliminary-runs/"
+    # Modification "../datasets/eval_data/preliminary-runs/" -> "../datasets/eval_data/"
+    eval_dir = "../datasets/eval_data/"
 
     train_args = utils_args.load_train_args()
     train_args.always_calc_thresh = False

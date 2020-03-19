@@ -20,7 +20,8 @@ def load_image(data_dir, image_file):
     Load RGB images from a file
     """
     image_dir = data_dir
-    local_path = "/".join(image_file.split("/")[-4:-1]) + "/" + image_file.split("/")[-1]
+    # modification: local_path = "/".join(image_file.split("/")[-4:-1]) + "/" + image_file.split("/")[-1] -> local_path = "/".join(image_file.split("\\"))
+    local_path = "/".join(image_file.split("\\"))
     img_path = "{0}/{1}".format(image_dir, local_path)
     return mpimg.imread(img_path)
 
@@ -161,5 +162,3 @@ def __normalize_and_reshape(x, is_gray_scale):
         img = img.astype('float32') / 255.
     img = img.reshape(-1, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS)
     return img
-
-
