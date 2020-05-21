@@ -1,5 +1,6 @@
 import numpy
-from keras.layers import np
+# modifcation
+import numpy as np
 from keras.utils import Sequence
 
 from utils import load_image, augment, preprocess, resize
@@ -25,8 +26,12 @@ class AutoencoderBatchGenerator(Sequence):
         input_shape = self.model.get_input_shape()
         x_shape = (len(batch_paths),) + (input_shape)
         x = np.empty(shape=x_shape)
-        for i, path in enumerate(batch_paths):
 
+        for i, path in enumerate(batch_paths):
+            # addition: hack
+
+            if isinstance(path, str) and path.startswith('collected_data/'):
+                path = path[len('collected_data/'):]
             # apply augmentation to 60% of the images, if enabled
             if APPLY_DATA_AUGMENTATION and np.random.rand() < 0.6:
                 # data augmentation

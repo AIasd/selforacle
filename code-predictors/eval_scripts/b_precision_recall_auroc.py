@@ -1,3 +1,7 @@
+# addition
+import os
+os.environ['PATH'] += ':home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors'
+
 import logging
 from typing import Tuple
 

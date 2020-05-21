@@ -1,5 +1,7 @@
 from keras import Sequential
-from keras.layers import Dense, np
+from keras.layers import Dense
+# modifcation
+import numpy as np
 
 from detectors.single_image_based_detectors.abs_single_image_autoencoder import AbstractSingleImageAD
 from detectors.single_image_based_detectors.autoencoder_batch_generator import AutoencoderBatchGenerator

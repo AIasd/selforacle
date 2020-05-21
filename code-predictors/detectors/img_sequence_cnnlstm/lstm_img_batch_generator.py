@@ -1,7 +1,8 @@
 import logging
 
 import numpy
-from keras.layers import np
+# modifcation
+import numpy as np
 from keras.utils import Sequence
 
 import utils

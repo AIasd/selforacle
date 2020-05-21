@@ -2,3 +2,16 @@ __init__.py
 code-predictors/eval_scripts/utils/__pycache__
 .idea
 */__pycache__/*
+
+code-predictors/detectors/__pycache__/
+code-predictors/detectors/img_sequence_cnnlstm/__pycache__/
+code-predictors/detectors/single_image_based_detectors/__pycache__/
+code-predictors/detectors/single_image_based_detectors/autoencoders/__pycache__/
+code-predictors/detectors/single_image_based_detectors/deeproad_rebuild/__pycache__/
+code-predictors/eval_db/__pycache__/
+code-predictors/eval_scripts/__pycache__/
+
+code-predictors/eval_scripts/a_set_true_labels_carla.py
+code-predictors/eval_scripts/b_precision_recall_auroc_carla.py
+code-predictors/evaluation_runner_carla.py
+code-predictors/inspect_results.py

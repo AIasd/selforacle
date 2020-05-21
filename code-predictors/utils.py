@@ -9,7 +9,13 @@ logger = logging.Logger("utils")
 # IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS = 33, 100, 3
 IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS = 80, 160, 3
 
+# modification
+# when we use udacity simulator
 ORIGINAL_IMAGE_HEIGHT, ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_CHANNELS = 160, 320, 3
+# when we use udacity simulator 0.9.6
+# ORIGINAL_IMAGE_HEIGHT, ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_CHANNELS = 160, 384, 3
+# when we use carla simulator 0.9.9
+# ORIGINAL_IMAGE_HEIGHT, ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_CHANNELS = 144, 256, 3
 
 # IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS = 160, 320, 3
 INPUT_SHAPE = (IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS)
@@ -20,8 +26,16 @@ def load_image(data_dir, image_file):
     Load RGB images from a file
     """
     image_dir = data_dir
-    # modification: local_path = "/".join(image_file.split("/")[-4:-1]) + "/" + image_file.split("/")[-1] -> local_path = "/".join(image_file.split("\\"))
-    local_path = "/".join(image_file.split("\\"))
+    # modification: local_path = "/".join(image_file.split("/")[-4:-1]) + "/" + image_file.split("/")[-1]
+    # ->
+    # if '\\' in image_file:
+    #     local_path = "/".join(image_file.split("\\"))
+
+    if '\\' in image_file:
+        local_path = "/".join(image_file.split("\\"))
+    else:
+        local_path = "/".join(image_file.split("/")[-4:-1]) + "/" + image_file.split("/")[-1]
+
     img_path = "{0}/{1}".format(image_dir, local_path)
     return mpimg.imread(img_path)
 

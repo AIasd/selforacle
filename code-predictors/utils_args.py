@@ -44,20 +44,22 @@ def specify_args():
     parser.add_argument('-trs', help='restrict train set size, -1 if none', dest='train_abs_size', type=int,
                         default=3000)
     parser.add_argument('-trm', nargs='+', help='restrict train set size for models', dest='train_abs_size_models',
-                        # type=str, default=MODELS)
-                        type=str, default=["DEEPROAD"])
+                        # type=str, default=MODELS) #modification
+                        type=str, default=["SAE"])
 
     parser.add_argument('-n', help='number of epochs', dest='nb_epoch', type=int, default=2)
     parser.add_argument('-b', help='batch size', dest='batch_size', type=int, default=32)
     parser.add_argument('-o', help='save best models only', dest='save_best_only', type=s2b, default='true')
     parser.add_argument('-m', nargs='+', help='model name', dest='model_name', type=str,
-                        # default=MODELS)
-                        default=["IMG-LSTM",'SAE', "VAE", 'CAE', "DAE"])
+                        # default=MODELS) #modification
+                        default=['SAE'])
     parser.add_argument('-r', help='random state', dest='random_state', type=int, default=0)
     parser.add_argument('-t', help="force recalc of thresholds on model relaod", dest="always_calc_thresh", type=s2b, default=True)
     parser.add_argument('-sl', help='sequence length', dest='sequence_length', type=int, default=30)
     parser.add_argument('-dl', help='delete trained model', dest='delete_trained', type=s2b, default='true')
     parser.add_argument('-g', help='gray scale image', dest='gray_scale', type=s2b, default='false')
+    # addition
+    parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
     args = parser.parse_args()
     return args
 

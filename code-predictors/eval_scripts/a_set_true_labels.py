@@ -1,6 +1,8 @@
+# addition
+import os
+os.environ['PATH'] += ':home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors'
 import logging
 from typing import List
-
 import utils_logging
 from eval_db import eval_setting, eval_single_img_distances, eval_seq_img_distances, eval_window
 from eval_db.database import Database

@@ -9,8 +9,8 @@ A preprint of the paper can be found on [arXiv](https://arxiv.org/abs/1910.04443
 **Software setup:**
 We adopted the [PyCharm](https://www.jetbrains.com/pycharm/) Professional 2019.3.1, a Python IDE by JetBrains.
 
-If you have [anaconda](https://www.continuum.io/downloads) or [miniconda](https://conda.io/miniconda.html) 
-installed on your machine, you can create and install all dependencies on a dedicated virtual environment, 
+If you have [anaconda](https://www.continuum.io/downloads) or [miniconda](https://conda.io/miniconda.html)
+installed on your machine, you can create and install all dependencies on a dedicated virtual environment,
 by running the following command:
 
 ```python
@@ -20,9 +20,9 @@ conda env create -f code-sdc/conda-env.yml
 
 Alternatively you can manually install the required libraries (see the contents of the conda-env.yml files) using ```pip```.
 
-**Hardware setup:** Training the DNN models (self-driving cars and anomaly detectors) on our datasets is computationally expensive. 
-Therefore we recommend using a machine with GPU. 
-In our setting, we ran our experiments on a machine equipped with a i9 processor, 32 GB of memory, and an Nvidia GPU GeForce RTX 2080 Ti with 11GB of dedicated memory. 
+**Hardware setup:** Training the DNN models (self-driving cars and anomaly detectors) on our datasets is computationally expensive.
+Therefore we recommend using a machine with GPU.
+In our setting, we ran our experiments on a machine equipped with a i9 processor, 32 GB of memory, and an Nvidia GPU GeForce RTX 2080 Ti with 11GB of dedicated memory.
 
 ## Repository Structure
 
@@ -88,9 +88,20 @@ You'll need the data folder which contains the training images.
 python code-predictors/training_runner.py
 ```
 
+
+using new data (carla 0.9.6)
+```
+python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/carla_lbc/collected_data' -sim carla_096
+```
+
+using new data (carla 0.9.9)
+```
+python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data' -sim carla_099
+```
+
 ## Improved Udacity simulator
 
-Our improved Udacity simulator is available as binary file for Windows and macOS platforms [here](https://drive.google.com/drive/folders/1i4naoN9Wermz5LSW_RNeXdN2zhDMKIDJ). 
+Our improved Udacity simulator is available as binary file for Windows and macOS platforms [here](https://drive.google.com/drive/folders/1i4naoN9Wermz5LSW_RNeXdN2zhDMKIDJ).
 
 ### Screenshots and video of the simulator
 *Note:* Click on the screenshot images to watch a demo video.
@@ -105,7 +116,7 @@ Our improved Udacity simulator is available as binary file for Windows and macOS
 
 ## Reference
 
-If you use our work in your research, or it helps it, or if you simply like it, please cite SelfOracle in your publications. 
+If you use our work in your research, or it helps it, or if you simply like it, please cite SelfOracle in your publications.
 Here is an example BibTeX entry:
 
 ```
@@ -120,10 +131,10 @@ Here is an example BibTeX entry:
 }
 ```
 
-## License 
+## License
 MIT. See the [LICENSE.md](https://github.com/testingautomated-usi/selforacle/blob/master/LICENSE.md) file.
 
 ## Contacts
 
-For any questions, feel free to contact Andrea Stocco ([andrea.stocco@usi.ch](mailto:andrea.stocco@usi.ch)) 
+For any questions, feel free to contact Andrea Stocco ([andrea.stocco@usi.ch](mailto:andrea.stocco@usi.ch))
 or Michael Weiss ([michael.weiss@usi.ch](mailto:michael.weiss@usi.ch)).

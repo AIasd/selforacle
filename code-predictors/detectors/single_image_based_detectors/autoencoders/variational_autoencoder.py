@@ -1,5 +1,7 @@
 from keras import Input, Model
-from keras.layers import Dense, Lambda, K
+# modifcation
+from keras.layers import Dense, Lambda
+from keras import backend as K
 
 from detectors.anomaly_detector import AnomalyDetector
 from detectors.single_image_based_detectors.abs_single_image_autoencoder import AbstractSingleImageAD

@@ -9,10 +9,10 @@ from eval_db.database import Database
 from eval_db.eval_seq_img_distances import SeqBasedDistance
 from eval_db.eval_setting import Setting
 from eval_db.eval_single_img_distances import SingleImgDistance
-
-SINGLE_IMAGE_ADS = ['SAE', "VAE", 'CAE', "DAE", "DEEPROAD"]
-
-SEQUENCE_BASED_ADS = ["IMG-LSTM"]
+# modification: ['SAE', "VAE", 'CAE', "DAE", "DEEPROAD"] -> ['SAE']
+SINGLE_IMAGE_ADS = ['SAE']
+# modification: ["IMG-LSTM"] -> []
+SEQUENCE_BASED_ADS = []
 
 logger = logging.Logger("main")
 utils_logging.log_info(logger)
@@ -117,7 +117,9 @@ def store_seq_losses(setting, per_ad_distances, row_ids, are_crashes, db: Databa
 
 
 def store_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
-    for i in range(len(per_ad_distances["VAE"])):
+    assert per_ad_distances
+    # modification: len(per_ad_distances["VAE"]) -> len(list(per_ad_distances.items())[0][1])
+    for i in range(len(list(per_ad_distances.items())[0][1])):
         setting_id = setting.id
         row_id = row_ids[i]
         row_id = row_id.item()
@@ -125,12 +127,23 @@ def store_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
             is_crash = False
         else:
             is_crash = True
-        vae_loss = per_ad_distances["VAE"][i]
-        sae_loss = per_ad_distances["SAE"][i]
-        cae_loss = per_ad_distances["CAE"][i]
-        dae_loss = per_ad_distances["DAE"][i]
-        deeproad_loss = per_ad_distances["DEEPROAD"][i]
-        deeproad_loss = deeproad_loss.item()
+        # add if conditions to make these losses are None when they are not evaluated
+        vae_loss = None
+        sae_loss = None
+        cae_loss = None
+        dae_loss = None
+        deeproad_loss = None
+        if "VAE" in per_ad_distances:
+            vae_loss = per_ad_distances["VAE"][i]
+        if "SAE" in per_ad_distances:
+            sae_loss = per_ad_distances["SAE"][i]
+        if "CAE" in per_ad_distances:
+            cae_loss = per_ad_distances["CAE"][i]
+        if "DAE" in per_ad_distances:
+            dae_loss = per_ad_distances["DAE"][i]
+        if "DEEPROAD" in per_ad_distances:
+            deeproad_loss = per_ad_distances["DEEPROAD"][i]
+            deeproad_loss = deeproad_loss.item()
         to_store = SingleImgDistance(setting_id=setting_id, row_id=row_id, is_crash=is_crash, vae_loss=vae_loss,
                                      cae_loss=cae_loss, dae_loss=dae_loss, sae_loss=sae_loss,
                                      deeproad_loss=deeproad_loss)
