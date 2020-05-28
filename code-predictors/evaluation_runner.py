@@ -9,38 +9,71 @@ from eval_db.database import Database
 from eval_db.eval_seq_img_distances import SeqBasedDistance
 from eval_db.eval_setting import Setting
 from eval_db.eval_single_img_distances import SingleImgDistance
+
+# addition
+import argparse
+
+# modification
+parser = argparse.ArgumentParser(description='Behavioral Cloning Evaluating Program')
+parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+args = parser.parse_args()
+
+
+train_args = utils_args.load_train_args(args.simulator)
+train_args.always_calc_thresh = False
+
+logger = logging.Logger("main")
+utils_logging.log_info(logger)
 # modification: ['SAE', "VAE", 'CAE', "DAE", "DEEPROAD"] -> ['SAE']
 SINGLE_IMAGE_ADS = ['SAE']
 # modification: ["IMG-LSTM"] -> []
 SEQUENCE_BASED_ADS = []
-
-logger = logging.Logger("main")
-utils_logging.log_info(logger)
-# modification: ["COMMAAI"] -> ["EPOCH"]
-EVAL_AGENTS = ["EPOCH"]
-# modification: ["Track1", "Track2", "Track3"] -> ["Track1"]
-EVAL_TRACKS = ["Track1"]
-# EVAL_TIME = ["DayOnly"]
-# EVAL_WEATHER = ["Sunny"]
-# TODO Change this every time you want to merge generated tables to compatible start ids
-SETTING_START_ID = 3000
-# modification: ["DayNight", "DayOnly"] -> ["DayNight"]
-EVAL_TIME = ["DayNight"]
-# modification: ["Fog", "Rain", "Snow", "Sunny"] -> ["Fog"]
-EVAL_WEATHER = ["Fog"]
+if train_args.simulator == 'udacity':
+    # modification: ["COMMAAI"] -> ["EPOCH"]
+    EVAL_AGENTS = ["EPOCH"]
+    # modification: ["Track1", "Track2", "Track3"] -> ["Track3"]
+    EVAL_TRACKS = ["Track3"]
+    # EVAL_TIME = ["DayOnly"]
+    # EVAL_WEATHER = ["Sunny"]
+    # TODO Change this every time you want to merge generated tables to compatible start ids
+    SETTING_START_ID = 3000
+    # modification: ["DayNight", "DayOnly"] -> ["DayNight"]
+    EVAL_TIME = ["DayNight"]
+    # modification: ["Fog", "Rain", "Snow", "Sunny"] -> ["Fog, Snow"]
+    EVAL_WEATHER = ["Fog", "Snow"]
+elif train_args.simulator == 'carla_096':
+    EVAL_AGENTS = ["LBC"]
+    EVAL_TRACKS = ["NoCrashTown02-v6"]
+    SETTING_START_ID = 3000
+    # hack. we use time to represent trial number for this simulator
+    EVAL_TIME = [str(i) for i in range(12)]
+    EVAL_WEATHER = ["N/A"]
+elif train_args.simulator == 'carla_099':
+    EVAL_AGENTS = ["LBC"]
+    route_indexes = [19, 29, 39, 49, 59]
+    weather_indexes = [11, 19]
+    EVAL_TRACKS = ['route_'+str(route)+'_'+str(weather) for in zip(routes_indexes, weather_indexes)]
+    SETTING_START_ID = 3000
+    # hack. we use time to represent trial number for this simulator
+    EVAL_TIME = ["N/A"]
+    EVAL_WEATHER = ["N/A"]
 
 
 def main():
     # Eval Config, change this line to evaluate agains another set
     # Modification "../datasets/eval_data/preliminary-runs/" -> "../datasets/eval_data/"
-    eval_dir = "../datasets/eval_data/"
+    if train_args.simulator == 'udacity':
+        eval_dir = "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/datasets/eval_data"
+    elif train_args.simulator == 'carla_096':
+        eval_dir = "/home/zhongzzy9/Documents/self-driving-car/carla_lbc/collected_data"
+    elif train_args.simulator == 'carla_099':
+        eval_dir = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data"
 
-    train_args = utils_args.load_train_args()
-    train_args.always_calc_thresh = False
+
 
     for train_data_dir in train_args.data_dir:
         train_dataset_name = training_runner.dataset_name_from_dir(train_data_dir)
-        db_name = "../models/trained-anomaly-detectors/" + train_dataset_name + "-based-eval.sqlite"
+        db_name = "../models/trained-anomaly-detectors/" + train_args.simulator + '-' + train_dataset_name + "-based-eval.sqlite"
 
         # Prepare Database
         db = Database(db_name, True)
@@ -52,23 +85,28 @@ def main():
         single_img_based_ads, sequence_based_ads = _prepare_ads(train_data_dir, train_args)
 
         # Evaluate for Single Image Based
-        for setting in settings:
-            data_dir = eval_dir + setting.get_folder_name()
+        for i, setting in enumerate(settings):
+            data_dir = eval_dir + '/' + setting.get_folder_name(train_args.simulator)
+            if train_args.simulator == 'udacity':
+                raw_data_dir = data_dir
+            else:
+                raw_data_dir = eval_dir
             if len(single_img_based_ads) > 0:
                 handle_single_image_based_ads(db=db, data_dir=data_dir, setting=setting,
-                                              single_img_based_ads=single_img_based_ads)
+                                              single_img_based_ads=single_img_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir)
 
             if len(sequence_based_ads) > 0:
                 handle_sequence_based_ads(db=db, data_dir=data_dir, setting=setting,
-                                          sequence_based_ads=sequence_based_ads)
+                                          sequence_based_ads=sequence_based_ads, simulator=train_args.simulator)
+        get_current_single_img_entries_num(db, 3000)
+        get_current_single_img_entries_num(db, 3001)
 
-
-def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads):
+def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulator):
     ad_distances = {}
     frame_ids = None
     are_crashes = None
     for ad_name, ad in sequence_based_ads.items():
-        logger.info("Calculating losses for " + setting.get_folder_name() + " with ad  " + ad_name)
+        logger.info("Calculating losses for " + setting.get_folder_name(simulator) + " with ad  " + ad_name)
         x, y, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
         assert len(x) == len(y) == len(frm_ids) == len(crashes)
         distances = ad.calc_losses(inputs=x, labels=y, data_dir=data_dir)
@@ -81,15 +119,15 @@ def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads):
                      are_crashes=are_crashes, db=db)
 
 
-def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads):
+def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, simulator, raw_data_dir):
     ad_distances = {}
     frame_ids = None
     are_crashes = None
     for ad_name, ad in single_img_based_ads.items():
-        logger.info("Calculating losses for " + setting.get_folder_name() + " with ad  " + ad_name)
+        logger.info("Calculating losses for " + setting.get_folder_name(simulator) + " with ad  " + ad_name)
         x, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
         assert len(x) == len(frm_ids) == len(crashes)
-        distances = ad.calc_losses(inputs=x, labels=None, data_dir=data_dir)
+        distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir)
         ad_distances[ad_name] = distances
         if frame_ids is None:
             frame_ids = frm_ids
@@ -153,6 +191,7 @@ def store_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
     db.commit()
 
 
+
 def _prepare_ads(data_dir, train_args):
     single_img_ads = {}
     for ad_name in SINGLE_IMAGE_ADS:
@@ -181,6 +220,16 @@ def _create_all_settings(db: Database):
     db.commit()
     return settings
 
+# addition:
+def get_current_single_img_entries_num(db, setting_id):
+    cursor = db.cursor.execute('select * from single_image_based_distances where setting_id=? ' +
+                               'order by row_id',
+                               (setting_id,))
+    var = cursor.fetchall()
+    result = []
+    # addition
+    print('setting id :', setting_id)
+    print('var :', len(var))
 
 if __name__ == '__main__':
     main()

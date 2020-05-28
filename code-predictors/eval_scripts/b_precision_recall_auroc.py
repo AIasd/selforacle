@@ -1,6 +1,6 @@
 # addition
-import os
-os.environ['PATH'] += ':home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors'
+import sys
+sys.path.append('/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors')
 
 import logging
 from typing import Tuple
@@ -12,42 +12,51 @@ import utils_logging
 from eval_db import eval_prec_recall, eval_window
 from eval_db.database import Database
 from eval_db.eval_prec_recall import PrecisionRecallAnalysis
-from eval_scripts import db_path
+from eval_scripts.db_path import get_db_path
+# addition
+import argparse
 
 CALC_AUROC = True
 CALC_PREC_RECALL = False
 
 AUROC_CALC_SAMPLING_FACTOR = 20  # 1 = No Sampling, n = 1/n of the losses are considered
 
-THRESHOLDS = {
-    "vae": {"0.68": 27.07115916991946, "0.9": 38.120301897480466, "0.95": 43.86094312127071, "0.99": 56.038196376888564,
-            "0.999": 71.95140165124738, "0.9999": 86.90662166303552, "0.99999": 101.28409503970909},
-    "cae": {"0.68": 13.376903121103881, "0.9": 19.26048873572004, "0.95": 22.34506281943677, "0.99": 28.93117824199429,
-            "0.999": 37.60016052364154, "0.9999": 45.79148090225994, "0.99999": 53.695420701648914},
-    "dae": {"0.68": 40.272194049324966, "0.9": 51.9341337226326, "0.95": 57.77528181318816, "0.99": 69.83010882684272,
-            "0.999": 85.09783843952644, "0.9999": 99.10057054295928, "0.99999": 112.3336694381103},
-    "deeproad": {"0.68": 3374.5632471550516, "0.9": 5363.3898674739285, "0.95": 6447.5932314257825,
-                 "0.99": 8826.728405803366, "0.999": 12050.394098718236, "0.9999": 15160.981798506993,
-                 "0.99999": 18204.28532004644},
-    "sae": {"0.68": 29.361018856328876, "0.9": 40.45529729327319, "0.95": 46.16822971023903, "0.99": 58.20754461663782,
-            "0.999": 73.82588456863898, "0.9999": 88.42246606777259, "0.99999": 102.40142769284085}
-}
+# THRESHOLDS = {
+#     "vae": {"0.68": 27.07115916991946, "0.9": 38.120301897480466, "0.95": 43.86094312127071, "0.99": 56.038196376888564,
+#             "0.999": 71.95140165124738, "0.9999": 86.90662166303552, "0.99999": 101.28409503970909},
+#     "cae": {"0.68": 13.376903121103881, "0.9": 19.26048873572004, "0.95": 22.34506281943677, "0.99": 28.93117824199429,
+#             "0.999": 37.60016052364154, "0.9999": 45.79148090225994, "0.99999": 53.695420701648914},
+#     "dae": {"0.68": 40.272194049324966, "0.9": 51.9341337226326, "0.95": 57.77528181318816, "0.99": 69.83010882684272,
+#             "0.999": 85.09783843952644, "0.9999": 99.10057054295928, "0.99999": 112.3336694381103},
+#     "deeproad": {"0.68": 3374.5632471550516, "0.9": 5363.3898674739285, "0.95": 6447.5932314257825,
+#                  "0.99": 8826.728405803366, "0.999": 12050.394098718236, "0.9999": 15160.981798506993,
+#                  "0.99999": 18204.28532004644},
+#     "sae": {"0.68": 29.361018856328876, "0.9": 40.45529729327319, "0.95": 46.16822971023903, "0.99": 58.20754461663782,
+#             "0.999": 73.82588456863898, "0.9999": 88.42246606777259, "0.99999": 102.40142769284085}
+# }
+#
+# SEQ_THRESHOLDS = {
+#     "lstm": {"0.68": 0.03967471005673909, "0.9": 0.04960214235753555, "0.95": 0.054508963524284165,
+#              "0.99": 0.0645317369955604, "0.999": 0.07707193970593226, "0.9999": 0.08845992912613872,
+#              "0.99999": 0.0991450074191446}
+# }
 
-SEQ_THRESHOLDS = {
-    "lstm": {"0.68": 0.03967471005673909, "0.9": 0.04960214235753555, "0.95": 0.054508963524284165,
-             "0.99": 0.0645317369955604, "0.999": 0.07707193970593226, "0.9999": 0.08845992912613872,
-             "0.99999": 0.0991450074191446}
-}
+
+THRESHOLDS = {
+    "sae": {'0.68': 24.60063070787854, '0.9': 33.58568276386414, '0.95': 38.19493759150628, '0.99': 47.88104673479925, '0.999': 60.40679085520649, '0.9999': 72.0845258472301, '0.99999': 83.24917994990672}
+    }
+SEQ_THRESHOLDS = {}
+
 
 logger = logging.Logger("Calc_Precision_Recall")
 utils_logging.log_info(logger)
 
 
-def calc_precision_recall():
+def calc_precision_recall(simulator):
     logger.warning("ATTENTION: Thresholds are hardcoded. Copy-paste after recalculating thresholds " +
                    "(hence, after each training of the models)!")
 
-    db_name = db_path.DB_PATH
+    db_name = get_db_path(simulator)
     db = Database(name=db_name, delete_existing=False)
     eval_prec_recall.remove_all_from_prec_recall(db=db)
 
@@ -62,7 +71,9 @@ def calc_precision_recall():
 
 def _eval(ad_name, ad_thresholds, db):
     # TODO Store auc_prec_recall in db as well
-    auroc, auc_prec_recall = calc_auroc_and_auc_prec_recall(db=db, ad_name=ad_name)
+    # modification
+    # auroc, auc_prec_recall = calc_auroc_and_auc_prec_recall(db=db, ad_name=ad_name)
+    auroc, auc_prec_recall = -1, -1
     for threshold_type, threshold in ad_thresholds.items():
         precision_recall_analysis = create_precision_recall_analysis(ad_name=ad_name,
                                                                      auroc=auroc, auc_prec_recall=auc_prec_recall,
@@ -153,4 +164,7 @@ def _calc_auc(x, y):
 
 
 if __name__ == '__main__':
-    calc_precision_recall()
+    parser = argparse.ArgumentParser(description='a_set_true_labels')
+    parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+    args = parser.parse_args()
+    calc_precision_recall(args.simulator)

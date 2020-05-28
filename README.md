@@ -84,7 +84,7 @@ This will generate a file `model-<epoch>.h5` whenever the performance in the epo
 
 You'll need the data folder which contains the training images.
 
-```python
+```
 python code-predictors/training_runner.py
 ```
 
@@ -97,6 +97,13 @@ python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-dri
 using new data (carla 0.9.9)
 ```
 python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data' -sim carla_099
+```
+
+
+### Testing an anomaly detector
+using new data (carla 0.9.6)
+```
+python code-predictors/evaluation_runner.py -sim carla_096
 ```
 
 ## Improved Udacity simulator

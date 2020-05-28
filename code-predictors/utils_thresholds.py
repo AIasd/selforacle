@@ -55,7 +55,7 @@ def calc_and_store_thresholds(losses: numpy.array, model_class: str) -> dict:
 
     for c in conf_intervals:
         thresholds[str(c)] = gamma.ppf(c, shape, loc=loc, scale=scale)
-
+    print(thresholds)
     as_json = json.dumps(thresholds)
 
     json_filename = str(Path.cwd()) + THRESHOLDS_LOCATION + model_class + ".json"

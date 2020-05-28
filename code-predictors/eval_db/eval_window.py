@@ -20,6 +20,8 @@ def calc_loss_score(all_distance_objects, start_frame, end_frame_excl, ad_name) 
     for i in range(start_frame, end_frame_excl - CALC_SCOPE + 1):
         sum = 0
         for j in range(i, i + CALC_SCOPE):
+            # print(i, j, len(all_distance_objects), all_distance_objects[i].loss_of(ad_name=ad_name), ad_name)
+            # this sum and max is actually not used since index i is used rather than index j
             sum = sum + all_distance_objects[i].loss_of(ad_name=ad_name)
         sums.append(sum)
     max_sum = max(sums)
@@ -66,14 +68,14 @@ def get_true_positives_count(db: Database, ad_name: str, threshold: float):
 
 
 def get_false_positives_count_ignore_subsequent(db: Database, ad_name: str, threshold: float):
-    cursor = db.cursor.execute('''select count(*) from windows 
+    cursor = db.cursor.execute('''select count(*) from windows
                                where ad_name = ? and loss_score >= ? and type = 'normal'
                                and not exists(
-                                    select 1 
+                                    select 1
                                     from windows as w2
                                     where w2.window_id = windows.window_id -1
                                     and w2.setting = windows.setting
-                                    and ad_name = ? and loss_score >= ? and type = 'normal'                                    
+                                    and ad_name = ? and loss_score >= ? and type = 'normal'
                                )
                                '''
                                , (ad_name, threshold, ad_name, threshold))
@@ -132,13 +134,16 @@ def store_single_image_windows(setting: int, window_id: int, window_type: str, e
     if ad_type == "seq":
         ads = SEQ_BASED_ADS
     elif ad_type == "single-img":
-        ads = SINGLE_IMAGE_BASED_ADS
+        # modification
+        # ads = SINGLE_IMAGE_BASED_ADS
+        ads = ['sae']
     else:
         # Ad type not known
         assert False
+    # modification
+    # print(entries[0].loss_of(ad_name='sae'))
     for ad_name in ads:
-        window = Window(setting=setting, window_id=window_id, ad_name=ad_name, start_frame=start_inc,
-                        end_frame=end_excl, all_distance_objects=entries, window_type=window_type)
+        window = Window(setting=setting, window_id=window_id, ad_name=ad_name, start_frame=start_inc, end_frame=end_excl, all_distance_objects=entries, window_type=window_type)
         insert_into_db(window=window, db=db)
 
 

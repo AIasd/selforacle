@@ -79,6 +79,9 @@ def insert_into_db(db: Database, precision_recall: PrecisionRecallAnalysis):
         precision_recall.pr_auc
     )
     db.cursor.execute(INSERT_STRING, insertable)
+    # addition
+    print('anomaly_detector: {}, threshold_type: {}, threshold: {}, true_positives: {}, false_positives: {}, true_negatives: {}, false_negatives: {}, prec: {}, recall: {}, f1: {}, num_anomalies: {}, num_normal: {}'.format(precision_recall.anomaly_detector, precision_recall.threshold_type, precision_recall.threshold, precision_recall.true_positives, precision_recall.false_positives, precision_recall.true_negatives,
+    precision_recall.false_negatives, precision_recall.prec, precision_recall.recall, precision_recall.f1, precision_recall.num_anomalies, precision_recall.num_normal))
 
 
 def get_aurocs(db: Database):

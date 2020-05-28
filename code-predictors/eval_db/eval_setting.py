@@ -13,16 +13,23 @@ class Setting:
         self.time: str = time
         self.weather: str = weather
 
-    def get_folder_name(self):
-        folder_time = self.time
-        if self.time == "DayOnly" and self.weather == "Sunny":
-            return self.agent + "-" + self.track + "-Normal"
-        if self.time == "DayOnly":
-            folder_time = ""
-        folder_weather = self.weather
-        if self.weather == "Sunny":
-            folder_weather = ""
-        return self.agent + "-" + self.track + "-" + folder_time + folder_weather
+    def get_folder_name(self, simulator='udacity'):
+        # modification
+        if simulator == 'udacity':
+            folder_time = self.time
+            if self.time == "DayOnly" and self.weather == "Sunny":
+                return self.agent + "-" + self.track + "-Normal"
+            if self.time == "DayOnly":
+                folder_time = ""
+            folder_weather = self.weather
+            if self.weather == "Sunny":
+                folder_weather = ""
+            folder_name = self.agent + "-" + self.track + "-" + folder_time + folder_weather
+        elif simulator == 'carla_096':
+            folder_name = self.track + '/' + self.time
+        elif simulator == 'carla_099':
+            folder_name = self.track
+        return folder_name
 
     def insert_into_db(self, db: Database) -> None:
         db.cursor.execute(INSERT_STATEMENT,

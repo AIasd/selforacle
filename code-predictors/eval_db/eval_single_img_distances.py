@@ -52,6 +52,8 @@ def load_all_for_setting(db: Database, setting_id: int) -> List[SingleImgDistanc
                                (setting_id,))
     var = cursor.fetchall()
     result = []
+    # addition
+    print('var :', len(var))
     for db_record in var:
         int_is_crash = db_record[2]
         is_crash = False

@@ -21,7 +21,7 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
 
     def load_img_paths(self, data_dir: str, restrict_size: bool, eval_data_mode: bool):
 
-
+        # modification
         x_center = None
         x_left = None
         x_right = None
@@ -51,47 +51,45 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
             if eval_data_mode:
                 data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
                 x_center = data_df['center'].values
-
-                settings = ['NoCrashTown02-v6']
-                routes = [str(i) for i in range(15)]
+                y = data_df['steering'].values
+                frame_ids = data_df['FrameId'].values
+                are_crashes = data_df['Crashed'].values
             else:
                 settings = ['NoCrashTown02-v6']
-                routes = [str(i) for i in range(15, 26)]
-            for setting in settings:
-                for route in routes:
-                    data_df = pd.read_csv(os.path.join(data_dir, setting, route, 'driving_log.csv'))
-                    if x_center is None:
-                        x_center = data_df['center'].values
-                        y = data_df['steering'].values
-                        if eval_data_mode:
-                            frame_ids = data_df['FrameId'].values
-                            are_crashes = data_df['Crashed'].values
-                    else:
-                        x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
-                        y = numpy.concatenate((y, data_df['steering'].values), axis=0)
-                        if eval_data_mode:
-                            frame_ids = numpy.concatenate((frame_ids, data_df['FrameId'].values+frame_ids.shape[0]), axis=0)
-                            are_crashes = numpy.concatenate((are_crashes, data_df['Crashed'].values), axis=0)
-
+                routes = [str(i) for i in range(12, 26)]
+                for setting in settings:
+                    for route in routes:
+                        data_df = pd.read_csv(os.path.join(data_dir, setting, route, 'driving_log.csv'))
+                        if x_center is None:
+                            x_center = data_df['center'].values
+                            y = data_df['steering'].values
+                        else:
+                            x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
+                            y = numpy.concatenate((y, data_df['steering'].values), axis=0)
+                print('+'*100, x_center.shape)
         elif self.args.simulator == 'carla_099':
             if eval_data_mode:
                 data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
                 x_center = data_df['center'].values
+                y = data_df['steering'].values
                 frame_ids = data_df['FrameId'].values
                 are_crashes = data_df['Crashed'].values
             else:
-                routes = ['route_19_0']
-                for route in routes:
-                    data_df = pd.read_csv(os.path.join(data_dir, route, 'new_measurements.csv'))
-
-                    x_center = data_df['center'].values
-                    x_left = data_df['left'].values
-                    x_right = data_df['right'].values
-                    y = data_df['steering'].values
-                    print('center'+'-'*100, x_center)
-                    print('left'+'-'*100, x_left)
-                    print('right'+'-'*100, x_right)
-
+                weather_indexes = [11, 19]
+                route_indexes = [19, 29, 39, 49, 59, 69]
+                for weather in weather_indexes:
+                    for route in route_indexes:
+                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+stt(route)+'_'+str(weather), 'driving_log.csv'))
+                        if x_center is None:
+                            x_center = data_df['center'].values
+                            y = data_df['steering'].values
+                            x_left = data_df['left'].values
+                            x_right = data_df['right'].values
+                        else:
+                            x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
+                            y = numpy.concatenate((y, data_df['steering'].values), axis=0)
+                            x_left = numpy.concatenate((x_left, data_df['left'].values), axis=0)
+                            x_right = numpy.concatenate((x_right, data_df['right'].values), axis=0)
 
         if restrict_size and len(x_center) > self.args.train_abs_size != -1 and not eval_data_mode:
             shuffle_seed = numpy.random.randint(low=1)

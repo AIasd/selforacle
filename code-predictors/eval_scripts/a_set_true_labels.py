@@ -1,13 +1,16 @@
 # addition
-import os
-os.environ['PATH'] += ':home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors'
+import sys
+sys.path.append('/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/selforacle/code-predictors')
 import logging
 from typing import List
 import utils_logging
 from eval_db import eval_setting, eval_single_img_distances, eval_seq_img_distances, eval_window
 from eval_db.database import Database
-from eval_scripts import db_path
+from eval_scripts.db_path import get_db_path
 
+from evaluation_runner import get_current_single_img_entries_num
+# addition
+import argparse
 NORMAL_LABEL = "normal"
 
 LABEL_GAP = "gap"
@@ -33,9 +36,10 @@ logger = logging.Logger("set_truelabels")
 utils_logging.log_info(logger)
 
 
-def set_true_labels():
-    db = Database(name=db_path.DB_PATH, delete_existing=False)
-
+def set_true_labels(simulator):
+    db = Database(name=get_db_path(simulator), delete_existing=False)
+    get_current_single_img_entries_num(db, 3000)
+    get_current_single_img_entries_num(db, 3001)
     eval_window.remove_all_stored_records(db=db)
     settings = eval_setting.get_all_settings(db)
 
@@ -162,12 +166,7 @@ def _detect_and_store_main_blocks(entries, current_setting_id: int, current_ad_t
             if abort:
                 continue
             # Set anomaly window
-            abort, anomaly_end_exc, window_count = attempt_to_set_anomaly_window(entries=entries,
-                                                                                 start_inc=reaction_end_excl,
-                                                                                 window_count=window_count,
-                                                                                 setting_id=current_setting_id,
-                                                                                 ad_type=current_ad_type,
-                                                                                 db=db)
+            abort, anomaly_end_exc, window_count = attempt_to_set_anomaly_window(entries=entries, start_inc=reaction_end_excl, window_count=window_count, setting_id=current_setting_id, ad_type=current_ad_type, db=db)
             if abort:
                 continue
 
@@ -217,9 +216,7 @@ def attempt_to_set_normal_windows(entries, anomaly_end_exc: int, window_count: i
 
 def attempt_to_set_anomaly_window(entries, start_inc: int, window_count: int, setting_id: int, ad_type: str,
                                   db: Database):
-    no_space, anomaly_start, anomaly_end_excl = _get_window_idx_or_mark_gap(start_inclusive=start_inc,
-                                                                            window_size=ANOMALY_WINDOW_LENGTH,
-                                                                            entries=entries)
+    no_space, anomaly_start, anomaly_end_excl = _get_window_idx_or_mark_gap(start_inclusive=start_inc, window_size=ANOMALY_WINDOW_LENGTH, entries=entries)
     other_label_found = check_and_treat_not_none_labels(anomaly_end_excl=anomaly_end_excl, anomaly_start=anomaly_start,
                                                         entries=entries)
     abort = no_space or other_label_found
@@ -233,8 +230,7 @@ def attempt_to_set_anomaly_window(entries, start_inc: int, window_count: int, se
 
 def _store(entries, start_inc, end_excl, window_type: str, window_count: int, setting_id: int, ad_type: str,
            db: Database) -> int:
-    eval_window.store_single_image_windows(setting=setting_id, window_id=window_count,
-                                           window_type=window_type, entries=entries, start_inc=start_inc,
+    eval_window.store_single_image_windows(setting=setting_id, window_id=window_count, window_type=window_type, entries=entries, start_inc=start_inc,
                                            end_excl=end_excl, db=db, ad_type=ad_type)
     return window_count + 1
 
@@ -298,7 +294,11 @@ def _check_frame_length(entries, label, window_length, allow_subsequent_same=Fal
 def _check_order_of_labels(entries):
     last_label = ""
     i = 0
+    # addition
+    print('len of entris check :', len(entries))
     for entry in entries:
+        # addition
+        # print(entry.true_label)
         assert entry.true_label is not None
         if last_label == "":
             assert i == 0
@@ -356,4 +356,7 @@ def _detect_next_misbehavior(entries, start_index_inc) -> int:
 
 
 if __name__ == '__main__':
-    set_true_labels()
+    parser = argparse.ArgumentParser(description='a_set_true_labels')
+    parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+    args = parser.parse_args()
+    set_true_labels(args.simulator)
