@@ -50,9 +50,10 @@ elif train_args.simulator == 'carla_096':
     EVAL_WEATHER = ["N/A"]
 elif train_args.simulator == 'carla_099':
     EVAL_AGENTS = ["LBC"]
-    route_indexes = [19, 29, 39, 49, 59]
-    weather_indexes = [11, 19]
-    EVAL_TRACKS = ['route_'+str(route)+'_'+str(weather) for in zip(routes_indexes, weather_indexes)]
+    weather_indexes = [19]
+    route_indexes = [19, 29, 39, 49, 59, 69]
+
+    EVAL_TRACKS = ['route_'+str(route)+'_'+str(weather) for route in route_indexes for weather in weather_indexes]
     SETTING_START_ID = 3000
     # hack. we use time to represent trial number for this simulator
     EVAL_TIME = ["N/A"]
@@ -100,6 +101,10 @@ def main():
                                           sequence_based_ads=sequence_based_ads, simulator=train_args.simulator)
         get_current_single_img_entries_num(db, 3000)
         get_current_single_img_entries_num(db, 3001)
+        get_current_single_img_entries_num(db, 3002)
+        get_current_single_img_entries_num(db, 3003)
+        get_current_single_img_entries_num(db, 3004)
+        get_current_single_img_entries_num(db, 3005)
 
 def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulator):
     ad_distances = {}

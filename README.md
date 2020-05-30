@@ -89,22 +89,36 @@ python code-predictors/training_runner.py
 ```
 
 
-using new data (carla 0.9.6)
+## using new data (carla 0.9.6)
+### Train an anomaly detector
 ```
 python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/carla_lbc/collected_data' -sim carla_096
 ```
-
-using new data (carla 0.9.9)
-```
-python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data' -sim carla_099
-```
-
-
 ### Testing an anomaly detector
-using new data (carla 0.9.6)
 ```
 python code-predictors/evaluation_runner.py -sim carla_096
+python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_096
+python code-predictors/eval_scripts/b_precision_recall_auroc.py -sim carla_096
 ```
+
+## using new data (carla 0.9.9)
+make changes in the global image dimensions variables in code-predictor/utils.
+
+make changes in code-predictors/detectors/single_image_based_detectors/abs_single_image_autoencoder.py for selecting training data.
+
+make changes in code-predictors/evaluation_runner.py for selecting testing data.
+### Train an anomaly detector
+```
+python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_autopilot' -sim carla_099
+```
+### Testing an anomaly detector
+```
+python code-predictors/evaluation_runner.py -sim carla_099
+python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_099
+python code-predictors/eval_scripts/b_precision_recall_auroc.py -sim carla_099
+```
+
+
 
 ## Improved Udacity simulator
 

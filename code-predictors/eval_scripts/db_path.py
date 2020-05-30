@@ -12,6 +12,6 @@ def get_db_path(simulator):
     elif simulator == 'carla_096':
         return "../models/trained-anomaly-detectors/carla_096-collected_data-based-eval.sqlite"
     elif simulator == 'carla_099':
-        return "../models/trained-anomaly-detectors/carla_099-collected_data-based-eval.sqlite"
+        return "../models/trained-anomaly-detectors/carla_099-collected_data_autopilot-based-eval.sqlite"
     else:
         raise

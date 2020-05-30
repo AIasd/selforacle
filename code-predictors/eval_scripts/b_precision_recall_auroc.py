@@ -41,9 +41,9 @@ AUROC_CALC_SAMPLING_FACTOR = 20  # 1 = No Sampling, n = 1/n of the losses are co
 #              "0.99999": 0.0991450074191446}
 # }
 
-
+# modification
 THRESHOLDS = {
-    "sae": {'0.68': 24.60063070787854, '0.9': 33.58568276386414, '0.95': 38.19493759150628, '0.99': 47.88104673479925, '0.999': 60.40679085520649, '0.9999': 72.0845258472301, '0.99999': 83.24917994990672}
+    "sae": {'special': 0.33, '0.68': 0.3561865667864408, '0.9': 0.4978029417820108, '0.95': 0.5711545090956883, '0.99': 0.7264005146908867, '0.999': 0.9287689389086069, '0.9999': 1.1185944073329077, '0.99999': 1.3008493564471613}
     }
 SEQ_THRESHOLDS = {}
 
@@ -75,30 +75,21 @@ def _eval(ad_name, ad_thresholds, db):
     # auroc, auc_prec_recall = calc_auroc_and_auc_prec_recall(db=db, ad_name=ad_name)
     auroc, auc_prec_recall = -1, -1
     for threshold_type, threshold in ad_thresholds.items():
-        precision_recall_analysis = create_precision_recall_analysis(ad_name=ad_name,
-                                                                     auroc=auroc, auc_prec_recall=auc_prec_recall,
-                                                                     db=db, threshold=threshold,
-                                                                     threshold_type=threshold_type)
+        precision_recall_analysis = create_precision_recall_analysis(ad_name=ad_name, auroc=auroc, auc_prec_recall=auc_prec_recall, db=db, threshold=threshold, threshold_type=threshold_type)
         eval_prec_recall.insert_into_db(db=db, precision_recall=precision_recall_analysis)
     db.commit()
 
 
 def create_precision_recall_analysis(ad_name, auroc, auc_prec_recall, db, threshold, threshold_type):
     true_positives = eval_window.get_true_positives_count(db=db, ad_name=ad_name, threshold=threshold)
-    false_positives = eval_window.get_false_positives_count_ignore_subsequent(db=db, ad_name=ad_name,
-                                                                              threshold=threshold)
+    # modification
+    # TBD: figure out what is get_false_positives_count_ignore_subsequent?
+    # false_positives = eval_window.get_false_positives_count_ignore_subsequent(db=db, ad_name=ad_name, threshold=threshold)
+    false_positives = eval_window.get_false_positives_count(db=db, ad_name=ad_name, threshold=threshold)
     true_negatives = eval_window.get_true_negatives_count(db=db, ad_name=ad_name, threshold=threshold)
     false_negatives = eval_window.get_false_negatives_count(db=db, ad_name=ad_name, threshold=threshold)
-    precision_recall_analysis = PrecisionRecallAnalysis(anomaly_detector=ad_name,
-                                                        threshold_type=threshold_type,
-                                                        threshold=threshold,
-                                                        true_positives=true_positives,
-                                                        false_positives=false_positives,
-                                                        true_negatives=true_negatives,
-                                                        false_negatives=false_negatives,
-                                                        auroc=auroc,
-                                                        auc_prec_recall=auc_prec_recall
-                                                        )
+    precision_recall_analysis = PrecisionRecallAnalysis(anomaly_detector=ad_name, threshold_type=threshold_type, threshold=threshold, true_positives=true_positives, false_positives=false_positives, true_negatives=true_negatives, false_negatives=false_negatives, auroc=auroc,
+    auc_prec_recall=auc_prec_recall)
     return precision_recall_analysis
 
 

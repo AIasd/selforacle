@@ -14,7 +14,7 @@ CALC_SCOPE = 4
 logger = logging.Logger("eval_windows")
 utils_logging.log_info(logger)
 
-
+# TBD: check if the use of this index "i" is consistent with the paper
 def calc_loss_score(all_distance_objects, start_frame, end_frame_excl, ad_name) -> float:
     sums = []
     for i in range(start_frame, end_frame_excl - CALC_SCOPE + 1):
@@ -25,6 +25,7 @@ def calc_loss_score(all_distance_objects, start_frame, end_frame_excl, ad_name) 
             sum = sum + all_distance_objects[i].loss_of(ad_name=ad_name)
         sums.append(sum)
     max_sum = max(sums)
+
     return max_sum / CALC_SCOPE
 
 
@@ -66,6 +67,12 @@ def get_true_positives_count(db: Database, ad_name: str, threshold: float):
                                "where ad_name = ? and loss_score >= ? and type = 'anomaly'", (ad_name, threshold))
     return _unpack_single_result_cursor(cursor)
 
+def get_false_positives_count(db: Database, ad_name: str, threshold: float):
+    cursor = db.cursor.execute('''select count(*) from windows
+                               where ad_name = ? and loss_score >= ? and type = 'normal'
+                               '''
+                               , (ad_name, threshold))
+    return _unpack_single_result_cursor(cursor)
 
 def get_false_positives_count_ignore_subsequent(db: Database, ad_name: str, threshold: float):
     cursor = db.cursor.execute('''select count(*) from windows

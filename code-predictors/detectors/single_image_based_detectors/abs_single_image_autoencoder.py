@@ -75,11 +75,12 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
                 frame_ids = data_df['FrameId'].values
                 are_crashes = data_df['Crashed'].values
             else:
-                weather_indexes = [11, 19]
-                route_indexes = [19, 29, 39, 49, 59, 69]
+                # TBD: change this
+                weather_indexes = [0]
+                route_indexes = [16, 26, 36, 46, 56, 66]
                 for weather in weather_indexes:
                     for route in route_indexes:
-                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+stt(route)+'_'+str(weather), 'driving_log.csv'))
+                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+str(route)+'_'+str(weather), 'driving_log.csv'))
                         if x_center is None:
                             x_center = data_df['center'].values
                             y = data_df['steering'].values

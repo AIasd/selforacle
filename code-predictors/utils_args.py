@@ -17,28 +17,29 @@ utils_logging.log_info(logger)
 
 # addition
 def get_args_serialization_path(simulator):
-    # TBD: changed to not-hardcoded
+    # TBD: changed to be not-hardcoded
     if simulator == 'udacity':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction//models/trained-anomaly-detectors/udacity_training-args.pkl"
+        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/udacity_training-args.pkl"
     elif simulator == 'carla_096':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction//models/trained-anomaly-detectors/carla_096_training-args.pkl"
+        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/carla_096_training-args.pkl"
     elif simulator == 'carla_099':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction//models/trained-anomaly-detectors/carla_099_training-args.pkl"
+        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/carla_099_training-args.pkl"
 
 def store_and_print_params(args):
     _print_parameters(args)
     # Check consistency with stored args
     path = get_args_serialization_path(args.simulator)
-    if os.path.exists(path):
-        stored_args = load_train_args(args.simulator)
-        if not args == stored_args:
-            logger.error(
-                "The stored settings " + path
-                + " do not match the specified args. "
-                + "If this is intended, please delete the stored args. "
-                + "We recommend also deleting the previously trained models.")
-    else:
-        _write_train_args(args=args)
+    # if os.path.exists(path):
+    #     stored_args = load_train_args(args.simulator)
+    #     if not args == stored_args:
+    #         logger.error(
+    #             "The stored settings " + path
+    #             + " do not match the specified args. "
+    #             + "If this is intended, please delete the stored args. "
+    #             + "We recommend also deleting the previously trained models.")
+    # else:
+    # overwrite args every time
+    _write_train_args(args=args)
 
 
 def _print_parameters(args):
@@ -56,7 +57,7 @@ def specify_args():
                         default=['../datasets/dataset5'])
     # modification
     parser.add_argument('-trs', help='restrict train set size, -1 if none', dest='train_abs_size', type=int,
-                        default=10000)
+                        default=60000)
     parser.add_argument('-trm', nargs='+', help='restrict train set size for models', dest='train_abs_size_models',
                         # type=str, default=MODELS) #modification
                         type=str, default=["SAE"])

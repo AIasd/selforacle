@@ -25,6 +25,7 @@ HEALING_LABEL = "healing"
 
 MISBEHAVIOR_LABEL = "misbehavior"
 
+# scale down by multiplied with 1/10
 REACTION_TIME = 50
 ANOMALY_WINDOW_LENGTH = 30
 NORMAL_WINDOW_LENGTH = ANOMALY_WINDOW_LENGTH
@@ -38,8 +39,7 @@ utils_logging.log_info(logger)
 
 def set_true_labels(simulator):
     db = Database(name=get_db_path(simulator), delete_existing=False)
-    get_current_single_img_entries_num(db, 3000)
-    get_current_single_img_entries_num(db, 3001)
+
     eval_window.remove_all_stored_records(db=db)
     settings = eval_setting.get_all_settings(db)
 
@@ -293,12 +293,10 @@ def _check_frame_length(entries, label, window_length, allow_subsequent_same=Fal
 
 def _check_order_of_labels(entries):
     last_label = ""
-    i = 0
-    # addition
-    print('len of entris check :', len(entries))
-    for entry in entries:
+
+    for i, entry in enumerate(entries):
         # addition
-        # print(entry.true_label)
+
         assert entry.true_label is not None
         if last_label == "":
             assert i == 0
@@ -307,6 +305,7 @@ def _check_order_of_labels(entries):
                    or last_label == REACTION_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
+            print(entry.true_label, i)
         elif entry.true_label == REACTION_LABEL:
             assert last_label == ANOMALY_LABEL \
                    or last_label == REACTION_LABEL \
@@ -329,10 +328,10 @@ def _check_order_of_labels(entries):
                    or last_label == HEALING_LABEL
 
         last_label = entry.true_label
-        i = i + 1
 
 
 def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, current_window_count: int, db: Database):
+    print('entries start :', len(entries))
     _remove_true_labels(entries)
     _detect_misbehaviors(entries)
     _detect_healing(entries)
@@ -343,6 +342,7 @@ def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, cur
                                                          directly_normal=directly_normal,
                                                          db=db)
     _integrity_checks_after_calc(entries)
+    print('entries end :', len(entries))
     return current_window_count
 
 
