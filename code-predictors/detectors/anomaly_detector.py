@@ -139,8 +139,9 @@ class AnomalyDetector(abc.ABC):
         batch_generator = self.get_batch_generator(x=inputs, y=labels, data_dir=data_dir)
 
         prediction_batch_size = batch_generator.get_batch_size()
+        # print('+'*200, batch_generator.__len__(), prediction_batch_size)
         result = None
-        for index in range(batch_generator.__len__()):
+        for index in range(batch_generator.__len__()+1):
             x, y = batch_generator.__getitem__(index=index)
             losses = self._calc_losses_for_batch(x, y, prediction_batch_size)
             if result is None:
@@ -151,12 +152,30 @@ class AnomalyDetector(abc.ABC):
             if index % 10 == 0:
                 logger.info("predicting batch "+ str(index) + " out of " + str(batch_generator.__len__()))
 
+        # PRINT: sorted evaluation loss
+        print('evaluation loss_list')
+        loss_list = [(loss, i) for i, loss in enumerate(result)]
+        print(sorted(loss_list, reverse=True)[:20])
+
         return result
 
     def _calc_losses_for_batch(self, x: numpy.array, labels: numpy.array, batch_size: int) -> numpy.array:
         self._assert_is_keras_type()
         # Apply Keras Prediction
         predictions = self.keras_model.predict(x=x, batch_size=batch_size)
+
+
+        # PRINT: show difference between input images and reconstructed images
+        # from matplotlib import pyplot as plt
+        # import numpy as np
+        #
+        # print('-'*100, np.max(predictions[-1]), np.min(predictions[-1]), '-'*100)
+        # print('-'*100, np.max(x[-1]), np.min(x[-1]), '-'*100)
+        # print(type(predictions[0].reshape((80, 160, 3))[0][0][0]))
+        # plt.hist(predictions[-1]-x[-1])
+        # plt.show()
+
+
         assert labels.shape == predictions.shape
         # Calculate distances
         distances = numpy.empty(shape=(len(labels),))

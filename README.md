@@ -118,6 +118,17 @@ python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_099
 python code-predictors/eval_scripts/b_precision_recall_auroc.py -sim carla_099
 ```
 
+## Pre-process data for our detection method
+In 2020_CARLA_challenge
+```
+python process_collected_data.py
+```
+In code-predictors/evaluation_runner.py, manually set route_indexes to consist of all the settings for both training and testing
+In selforacle
+```
+python code-predictors/evaluation_runner.py -sim carla_099
+python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_099
+```
 
 
 ## Improved Udacity simulator

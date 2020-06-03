@@ -11,6 +11,8 @@ from eval_scripts.db_path import get_db_path
 from evaluation_runner import get_current_single_img_entries_num
 # addition
 import argparse
+import pandas as pd
+
 NORMAL_LABEL = "normal"
 
 LABEL_GAP = "gap"
@@ -44,20 +46,33 @@ def set_true_labels(simulator):
     settings = eval_setting.get_all_settings(db)
 
     for setting in settings:
+
+        # TBD: make it not hardcoded
+        if simulator == 'carla_099':
+
+            driving_log = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data/"+setting.track+'/driving_log.csv'
+        else:
+            driving_log = None
+
+
+
         logger.info("labelling windows for setting " + str(setting.id))
         current_window_count = 0
 
         current_ad_type = "single-img"
         single_img_entries = eval_single_img_distances.load_all_for_setting(db, setting_id=setting.id)
-        current_window_count = _set_true_labels(entries=single_img_entries, current_setting_id=setting.id,
-                                                current_ad_type=current_ad_type,
-                                                current_window_count=current_window_count, db=db)
+
+
+
+
+        current_window_count = _set_true_labels(entries=single_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type, current_window_count=current_window_count, db=db, driving_log=driving_log)
+
         eval_single_img_distances.update_true_label_on_db(db=db, records=single_img_entries)
 
         current_ad_type = "seq"
         single_img_entries = eval_seq_img_distances.load_all_for_setting(db, setting_id=setting.id)
         _set_true_labels(entries=single_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type,
-                         current_window_count=current_window_count, db=db)
+                         current_window_count=current_window_count, db=db, driving_log=driving_log)
         eval_seq_img_distances.update_true_label_on_db(db=db, records=single_img_entries)
 
     db.commit()
@@ -267,10 +282,10 @@ def _next_not_none_label_index(entries, start_index_inc: int, end_index_excl: in
     return -1
 
 
-def _integrity_checks_after_calc(entries):
+def _integrity_checks_after_calc(entries, driving_log):
     # Re-create normal order
     entries.reverse()
-    _check_order_of_labels(entries)
+    _check_order_of_labels(entries, driving_log)
     _check_frame_length(entries, label=ANOMALY_LABEL, window_length=ANOMALY_WINDOW_LENGTH)
     _check_frame_length(entries, label=NORMAL_LABEL, window_length=NORMAL_WINDOW_LENGTH, allow_subsequent_same=True)
     _check_frame_length(entries, label=REACTION_LABEL, window_length=REACTION_TIME)
@@ -291,12 +306,14 @@ def _check_frame_length(entries, label, window_length, allow_subsequent_same=Fal
             label_count = 0
 
 
-def _check_order_of_labels(entries):
+def _check_order_of_labels(entries, driving_log):
     last_label = ""
+    data_df = pd.read_csv(driving_log)
 
+    behaviors = []
     for i, entry in enumerate(entries):
         # addition
-
+        behavior = -1
         assert entry.true_label is not None
         if last_label == "":
             assert i == 0
@@ -305,7 +322,6 @@ def _check_order_of_labels(entries):
                    or last_label == REACTION_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
-            print(entry.true_label, i)
         elif entry.true_label == REACTION_LABEL:
             assert last_label == ANOMALY_LABEL \
                    or last_label == REACTION_LABEL \
@@ -316,6 +332,7 @@ def _check_order_of_labels(entries):
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL \
                    or last_label == ANOMALY_LABEL
+            behavior = 1
         elif entry.true_label == HEALING_LABEL:
             assert last_label == MISBEHAVIOR_LABEL \
                    or last_label == HEALING_LABEL
@@ -326,11 +343,16 @@ def _check_order_of_labels(entries):
         elif entry.true_label == LABEL_GAP:
             assert last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
-
+        elif entry.true_label == NORMAL_LABEL:
+            behavior = 0
         last_label = entry.true_label
+        behaviors.append(behavior)
+    if len(behaviors) ==  len(data_df['center']):
+        data_df['behaviors'] = behaviors
+        data_df.to_csv(driving_log, index=False)
 
 
-def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, current_window_count: int, db: Database):
+def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, current_window_count: int, db: Database, driving_log: str):
     print('entries start :', len(entries))
     _remove_true_labels(entries)
     _detect_misbehaviors(entries)
@@ -341,7 +363,7 @@ def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, cur
                                                          window_count=current_window_count,
                                                          directly_normal=directly_normal,
                                                          db=db)
-    _integrity_checks_after_calc(entries)
+    _integrity_checks_after_calc(entries, driving_log)
     print('entries end :', len(entries))
     return current_window_count
 
@@ -358,5 +380,7 @@ def _detect_next_misbehavior(entries, start_index_inc) -> int:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='a_set_true_labels')
     parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+
+
     args = parser.parse_args()
     set_true_labels(args.simulator)

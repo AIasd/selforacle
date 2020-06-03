@@ -66,7 +66,7 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
                         else:
                             x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
                             y = numpy.concatenate((y, data_df['steering'].values), axis=0)
-                print('+'*100, x_center.shape)
+
         elif self.args.simulator == 'carla_099':
             if eval_data_mode:
                 data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
@@ -76,11 +76,14 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
                 are_crashes = data_df['Crashed'].values
             else:
                 # TBD: change this
-                weather_indexes = [0]
-                route_indexes = [16, 26, 36, 46, 56, 66]
+                weather_indexes = [19]
+                route_indexes = [16, 26, 36]
                 for weather in weather_indexes:
                     for route in route_indexes:
-                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+str(route)+'_'+str(weather), 'driving_log.csv'))
+                        route_str = str(route)
+                        if route < 10:
+                            route_str = '0'+route_str
+                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+route_str+'_'+str(weather), 'driving_log.csv'))
                         if x_center is None:
                             x_center = data_df['center'].values
                             y = data_df['steering'].values

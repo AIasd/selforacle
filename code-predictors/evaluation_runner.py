@@ -50,10 +50,17 @@ elif train_args.simulator == 'carla_096':
     EVAL_WEATHER = ["N/A"]
 elif train_args.simulator == 'carla_099':
     EVAL_AGENTS = ["LBC"]
-    weather_indexes = [19]
-    route_indexes = [19, 29, 39, 49, 59, 69]
+    weather_indexes = [0]
+    route_indexes = [0, 1, 2, 3, 4, 5]
 
-    EVAL_TRACKS = ['route_'+str(route)+'_'+str(weather) for route in route_indexes for weather in weather_indexes]
+    route_str_list = []
+    for route in route_indexes:
+        route_str = str(route)
+        if route < 10:
+            route_str = '0'+route_str
+        route_str_list.append(route_str)
+
+    EVAL_TRACKS = ['route_'+route_str+'_'+str(weather) for route_str in route_str_list for weather in weather_indexes]
     SETTING_START_ID = 3000
     # hack. we use time to represent trial number for this simulator
     EVAL_TIME = ["N/A"]
@@ -63,13 +70,13 @@ elif train_args.simulator == 'carla_099':
 def main():
     # Eval Config, change this line to evaluate agains another set
     # Modification "../datasets/eval_data/preliminary-runs/" -> "../datasets/eval_data/"
+    # TBD: make it not hardcoded
     if train_args.simulator == 'udacity':
         eval_dir = "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/datasets/eval_data"
     elif train_args.simulator == 'carla_096':
         eval_dir = "/home/zhongzzy9/Documents/self-driving-car/carla_lbc/collected_data"
     elif train_args.simulator == 'carla_099':
         eval_dir = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data"
-
 
 
     for train_data_dir in train_args.data_dir:
@@ -120,8 +127,7 @@ def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulat
             frame_ids = frm_ids
             are_crashes = crashes
     logger.info("Done. Now storing sequence based eval for setting " + setting.get_folder_name())
-    store_seq_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids,
-                     are_crashes=are_crashes, db=db)
+    store_seq_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids, are_crashes=are_crashes, db=db)
 
 
 def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, simulator, raw_data_dir):
@@ -131,6 +137,7 @@ def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, s
     for ad_name, ad in single_img_based_ads.items():
         logger.info("Calculating losses for " + setting.get_folder_name(simulator) + " with ad  " + ad_name)
         x, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
+
         assert len(x) == len(frm_ids) == len(crashes)
         distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir)
         ad_distances[ad_name] = distances
@@ -138,8 +145,7 @@ def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, s
             frame_ids = frm_ids
             are_crashes = crashes
     logger.info("Done. Now storing single img based eval for setting " + setting.get_folder_name())
-    store_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids,
-                 are_crashes=are_crashes, db=db)
+    store_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids, are_crashes=are_crashes, db=db)
 
 
 def store_seq_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
@@ -200,13 +206,11 @@ def store_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
 def _prepare_ads(data_dir, train_args):
     single_img_ads = {}
     for ad_name in SINGLE_IMAGE_ADS:
-        single_img_ads[ad_name] = training_runner.load_or_train_model(args=train_args, data_dir=data_dir,
-                                                                      model_name=ad_name)
+        single_img_ads[ad_name] = training_runner.load_or_train_model(args=train_args, data_dir=data_dir, model_name=ad_name)
     sequence_based_ads = {}
     logger.warning("Enable squence based again")
     for ad_name in SEQUENCE_BASED_ADS:
-        sequence_based_ads[ad_name] = training_runner.load_or_train_model(args=train_args, data_dir=data_dir,
-                                                                          model_name=ad_name)
+        sequence_based_ads[ad_name] = training_runner.load_or_train_model(args=train_args, data_dir=data_dir, model_name=ad_name)
     return single_img_ads, sequence_based_ads
 
 

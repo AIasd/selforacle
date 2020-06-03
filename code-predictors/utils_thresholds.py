@@ -47,6 +47,13 @@ def calc_and_store_thresholds(losses: numpy.array, model_class: str) -> dict:
 
     shape, loc, scale = gamma.fit(losses, floc=0)
 
+    # PRINT: sorted training loss
+    print('training loss_list')
+    loss_list = [(loss, i) for i, loss in enumerate(losses)]
+    print(sorted(loss_list, reverse=True)[:20])
+
+
+
     thresholds = {}
 
     conf_intervals = [0.68, 0.90, 0.95, 0.99, 0.999, 0.9999, 0.99999]

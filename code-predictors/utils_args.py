@@ -57,7 +57,7 @@ def specify_args():
                         default=['../datasets/dataset5'])
     # modification
     parser.add_argument('-trs', help='restrict train set size, -1 if none', dest='train_abs_size', type=int,
-                        default=60000)
+                        default=10000)
     parser.add_argument('-trm', nargs='+', help='restrict train set size for models', dest='train_abs_size_models',
                         # type=str, default=MODELS) #modification
                         type=str, default=["SAE"])
@@ -69,7 +69,7 @@ def specify_args():
                         # default=MODELS) #modification
                         default=['SAE'])
     parser.add_argument('-r', help='random state', dest='random_state', type=int, default=0)
-    parser.add_argument('-t', help="force recalc of thresholds on model relaod", dest="always_calc_thresh", type=s2b, default=True)
+    parser.add_argument('-t', help="force recalc of thresholds on model reload", dest="always_calc_thresh", type=s2b, default=True)
     parser.add_argument('-sl', help='sequence length', dest='sequence_length', type=int, default=30)
     parser.add_argument('-dl', help='delete trained model', dest='delete_trained', type=s2b, default='true')
     parser.add_argument('-g', help='gray scale image', dest='gray_scale', type=s2b, default='false')
