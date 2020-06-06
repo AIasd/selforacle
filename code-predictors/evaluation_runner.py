@@ -12,11 +12,14 @@ from eval_db.eval_single_img_distances import SingleImgDistance
 
 # addition
 import argparse
-
+import numpy as np
 # modification
 parser = argparse.ArgumentParser(description='Behavioral Cloning Evaluating Program')
 parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+# should let this equal to labeling when not running baseline
+parser.add_argument('-m', help='mode for evaluation', dest='mode', type=str, default='')
 args = parser.parse_args()
+mode = args.mode
 
 
 train_args = utils_args.load_train_args(args.simulator)
@@ -51,7 +54,9 @@ elif train_args.simulator == 'carla_096':
 elif train_args.simulator == 'carla_099':
     EVAL_AGENTS = ["LBC"]
     weather_indexes = [0]
-    route_indexes = [0, 1, 2, 3, 4, 5]
+    route_indexes = [i for i in range(76)]
+    # index 13: scenario cannot be set up successfully
+    route_indexes.remove(13)
 
     route_str_list = []
     for route in route_indexes:
@@ -101,7 +106,7 @@ def main():
                 raw_data_dir = eval_dir
             if len(single_img_based_ads) > 0:
                 handle_single_image_based_ads(db=db, data_dir=data_dir, setting=setting,
-                                              single_img_based_ads=single_img_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir)
+                                              single_img_based_ads=single_img_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir, mode=mode)
 
             if len(sequence_based_ads) > 0:
                 handle_sequence_based_ads(db=db, data_dir=data_dir, setting=setting,
@@ -130,7 +135,7 @@ def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulat
     store_seq_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids, are_crashes=are_crashes, db=db)
 
 
-def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, simulator, raw_data_dir):
+def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, simulator, raw_data_dir, mode=None):
     ad_distances = {}
     frame_ids = None
     are_crashes = None
@@ -139,7 +144,12 @@ def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, s
         x, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
 
         assert len(x) == len(frm_ids) == len(crashes)
-        distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir)
+        if mode == 'labeling':
+            distances = np.zeros_like(x)
+        else:
+            distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir)
+            print('+'*200)
+
         ad_distances[ad_name] = distances
         if frame_ids is None:
             frame_ids = frm_ids

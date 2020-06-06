@@ -311,9 +311,12 @@ def _check_order_of_labels(entries, driving_log):
     data_df = pd.read_csv(driving_log)
 
     behaviors = []
+    behaviors_names = []
     for i, entry in enumerate(entries):
+        # print(i, last_label, entry.true_label)
         # addition
         behavior = -1
+        behavior_name = 'None'
         assert entry.true_label is not None
         if last_label == "":
             assert i == 0
@@ -322,33 +325,45 @@ def _check_order_of_labels(entries, driving_log):
                    or last_label == REACTION_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
+            behavior_name = MISBEHAVIOR_LABEL
         elif entry.true_label == REACTION_LABEL:
             assert last_label == ANOMALY_LABEL \
                    or last_label == REACTION_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
+            behavior_name = REACTION_LABEL
         elif entry.true_label == ANOMALY_LABEL:
             assert last_label == NORMAL_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL \
                    or last_label == ANOMALY_LABEL
+            behavior_name = ANOMALY_LABEL
             behavior = 1
         elif entry.true_label == HEALING_LABEL:
             assert last_label == MISBEHAVIOR_LABEL \
                    or last_label == HEALING_LABEL
+            behavior_name = HEALING_LABEL
         elif entry.true_label == IGNORE_END_OF_STREAM_LABEL:
+
+            # add LABEL_GAP here
             assert last_label == HEALING_LABEL \
                    or last_label == NORMAL_LABEL \
-                   or last_label == IGNORE_END_OF_STREAM_LABEL
+                   or last_label == IGNORE_END_OF_STREAM_LABEL \
+                   or last_label == LABEL_GAP
+            behavior_name = IGNORE_END_OF_STREAM_LABEL
         elif entry.true_label == LABEL_GAP:
             assert last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
+            behavior_name = LABEL_GAP
         elif entry.true_label == NORMAL_LABEL:
+            behavior_name = NORMAL_LABEL
             behavior = 0
         last_label = entry.true_label
         behaviors.append(behavior)
+        behaviors_names.append(behavior_name)
     if len(behaviors) ==  len(data_df['center']):
         data_df['behaviors'] = behaviors
+        data_df['behaviors_names'] = behaviors_names
         data_df.to_csv(driving_log, index=False)
 
 
