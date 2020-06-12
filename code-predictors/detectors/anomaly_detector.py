@@ -9,6 +9,8 @@ from tensorflow.python.keras.utils import Sequence
 import utils_logging
 import utils_thresholds
 
+import numpy as np
+
 logger = logging.Logger("AbstractAnomalyDetector")
 utils_logging.log_info(logger)
 
@@ -61,7 +63,7 @@ class AnomalyDetector(abc.ABC):
         logger.error("load_img_paths must be overriden in child class")
         exit(1)
 
-    def load_or_train_model(self, x_train, y_train, data_dir: str):
+    def load_or_train_model(self, restrict_size: int, data_dir: str):
         model_class = self.__class__.__name__.lower()
         dataset_name = os.path.basename(os.path.normpath(data_dir))
         model_name_on_disk = "../models/trained-anomaly-detectors/" + dataset_name + "-" + model_class + ".h5"
@@ -72,6 +74,8 @@ class AnomalyDetector(abc.ABC):
             try:
                 self._load_existing_model(model_name_on_disk)
             except:
+                x_train, y_train = self.load_img_paths(restrict_size=restrict_size, data_dir=data_dir, eval_data_mode=False)
+
                 self._treat_model_loading_problem(data_dir, model_class, model_name_on_disk, x_train, y_train)
             if self.args.always_calc_thresh:
                 self._calc_and_store_thresholds(x_train=x_train, y_train=y_train, data_dir=data_dir,
@@ -79,6 +83,8 @@ class AnomalyDetector(abc.ABC):
             else:
                 self._load_thresholds(data_dir, model_class)
         else:
+            x_train, y_train = self.load_img_paths(restrict_size=restrict_size, data_dir=data_dir, eval_data_mode=False)
+
             self._train_model(x_train=x_train,
                               y_train=y_train,
                               x_validation=None,
@@ -126,23 +132,39 @@ class AnomalyDetector(abc.ABC):
                                        epochs=args.nb_epoch,
                                        use_multiprocessing=False, )
 
-        self._post_training(self.keras_model, x_train, y_train, data_dir, args)
+        # modification: comment out this for now
+        # self._post_training(self.keras_model, x_train, y_train, data_dir, args)
 
-    def calc_losses(self, inputs: numpy.array, labels: numpy.array, data_dir: str) -> numpy.array:
+    def calc_losses(self, inputs: numpy.array, labels: numpy.array, data_dir: str, case_name: str='') -> numpy.array:
         """
         Calculates losses for all input and labels passed. The data in the passed arrays are img paths
         :param inputs: Input paths (one dimensional for single images, two dimensional for series)
         :param labels: Paths to images to validate against. Ignored for autoencoders.
         :return: List of losses, in same order as inputs
         """
+        # addition: extract feature vector
+        feature_extractor = keras.Model(self.keras_model.input, self.keras_model.get_layer("layer_encoder").output)
+
+
+
+
+
+
         # Note: This would fail for deeproad. Hence, deeproad will override this method
         batch_generator = self.get_batch_generator(x=inputs, y=labels, data_dir=data_dir)
 
         prediction_batch_size = batch_generator.get_batch_size()
         # print('+'*200, batch_generator.__len__(), prediction_batch_size)
         result = None
+        features_list = []
+
+
         for index in range(batch_generator.__len__()+1):
             x, y = batch_generator.__getitem__(index=index)
+            if len(case_name) > 0 and x.shape[0] > 0:
+                feature = feature_extractor.predict(x=x)
+                features_list.append(feature)
+
             losses = self._calc_losses_for_batch(x, y, prediction_batch_size)
             if result is None:
                 result = losses
@@ -151,11 +173,14 @@ class AnomalyDetector(abc.ABC):
 
             if index % 10 == 0:
                 logger.info("predicting batch "+ str(index) + " out of " + str(batch_generator.__len__()))
+        if len(case_name) > 0:
+            features = np.concatenate(features_list, axis=0)
+            np.save(data_dir+'/'+case_name+'_features', features)
 
         # PRINT: sorted evaluation loss
-        print('evaluation loss_list')
-        loss_list = [(loss, i) for i, loss in enumerate(result)]
-        print(sorted(loss_list, reverse=True)[:20])
+        # loss_list = [(loss, i) for i, loss in enumerate(result)]
+        # print('evaluation loss_list')
+        # print(sorted(loss_list, reverse=True)[:20])
 
         return result
 
@@ -175,8 +200,9 @@ class AnomalyDetector(abc.ABC):
         # plt.hist(predictions[-1]-x[-1])
         # plt.show()
 
-
-        assert labels.shape == predictions.shape
+        # hack: it's weird that predictions can be of type list in the middle of preicting certain batches
+        if labels.shape[0] > 0:
+            assert labels.shape == predictions.shape
         # Calculate distances
         distances = numpy.empty(shape=(len(labels),))
         for i in range(len(labels)):
@@ -194,6 +220,10 @@ class AnomalyDetector(abc.ABC):
     def _calc_and_store_thresholds(self, x_train: numpy.array, y_train: numpy.array, data_dir: str, model_class: str):
         logger.info("Calculating losses...")
         losses = self.calc_losses(inputs=x_train, labels=y_train, data_dir=data_dir)
+
+
+
+
         logger.info("...Done. Calculating thresholds now...")
         return utils_thresholds.calc_and_store_thresholds(losses=losses, model_class=model_class)
 

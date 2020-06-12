@@ -59,9 +59,7 @@ class LstmImgBatchGenerator(Sequence):
         images = np.empty([len(paths), IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
 
         for k, path in enumerate(paths):
-            images[k] = utils.load_img_from_path(data_dir=self.data_dir,
-                                                                        image_name=path,
-                                                                        is_gray_scale=self.gray_scale)
+            images[k] = utils.load_img_from_path(data_dir=self.data_dir, image_name=path, is_gray_scale=self.gray_scale)
         return images
 
 

@@ -55,7 +55,7 @@ class CnnLstmImg(AnomalyDetector):
                            input_shape=INPUT_SHAPE,
                            padding='same',
                            return_sequences=True,
-                           activation='relu'))
+                           activation='relu', name="layer_encoder"))
         seq.add(BatchNormalization())
         seq.add(Conv3D(filters=IMAGE_CHANNELS,
                        kernel_size=(1, 1, 1),
@@ -70,28 +70,60 @@ class CnnLstmImg(AnomalyDetector):
 
     def load_img_paths(self, data_dir: str, restrict_size: bool, eval_data_mode: bool):
 
-        x = None
+        x_center = None
         frame_ids = None  # Only used in eval data mode
         are_crashes = None  # Only used in eval data mode
 
-        if eval_data_mode:
-            data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
-            x = data_df['center'].values
-            frame_ids = data_df['FrameId'].values
-            are_crashes = data_df['Crashed'].values
+        if self.args.simulator == 'udacity':
+            if eval_data_mode:
+                data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
+                x_center = data_df['center'].values
+                frame_ids = data_df['FrameId'].values
+                are_crashes = data_df['Crashed'].values
 
-        else:
-            tracks = ["track1", "track2", "track3"]
-            drive = ["normal", "reverse"]
+            else:
+                tracks = ["track1", "track2", "track3"]
+                drive = ["normal", "reverse"]
 
-            for track in tracks:
-                for drive_style in drive:
-                    data_df = pd.read_csv(os.path.join(data_dir, track, drive_style, 'driving_log.csv'))
-                    if x is None:
-                        x = data_df['center'].values
-                    else:
-                        x = numpy.concatenate((x, data_df['center'].values), axis=0)
+                for track in tracks:
+                    for drive_style in drive:
+                        data_df = pd.read_csv(os.path.join(data_dir, track, drive_style, 'driving_log.csv'))
+                        if x_center is None:
+                            x_center = data_df['center'].values
+                        else:
+                            x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
 
+        # no support for carla_096 for now since we are not using it
+        elif self.args.simulator == 'carla_099':
+            if eval_data_mode:
+                data_df = pd.read_csv(os.path.join(data_dir, 'driving_log.csv'))
+                x_center = data_df['center'].values
+                frame_ids = data_df['FrameId'].values
+                are_crashes = data_df['Crashed'].values
+            else:
+                # TBD: change this
+                weather_indexes = [15]
+                route_indexes = [i for i in range(30)]
+                route_indexes.remove(13)
+                for weather in weather_indexes:
+                    for route in route_indexes:
+                        route_str = str(route)
+                        if route < 10:
+                            route_str = '0'+route_str
+                        data_df = pd.read_csv(os.path.join(data_dir, 'route_'+route_str+'_'+str(weather), 'driving_log.csv'))
+                        if x_center is None:
+                            x_center = data_df['center'].values
+                            x_left = data_df['left'].values
+                            x_right = data_df['right'].values
+                        else:
+                            x_center = numpy.concatenate((x_center, data_df['center'].values), axis=0)
+                            x_left = numpy.concatenate((x_left, data_df['left'].values), axis=0)
+                            x_right = numpy.concatenate((x_right, data_df['right'].values), axis=0)
+
+
+
+
+        x = x_center
         assert len(x) > 0
 
         print("Read %d samples" % len(x))
@@ -168,8 +200,14 @@ class CnnLstmImg(AnomalyDetector):
 
             reshaped = predicted.reshape(utils.IMAGE_HEIGHT, utils.IMAGE_WIDTH, utils.IMAGE_CHANNELS)
 
-            folder_path = '../temp_generated_imgs/' + str(index) + "/"
-            shutil.rmtree(folder_path)
+            parent_folder = '../temp_generated_imgs'
+            folder_path = parent_folder+'/' + str(index) + "/"
+            # modification
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            if not os.path.exists(parent_folder):
+                os.mkdir(parent_folder)
+
             os.mkdir(folder_path)
             predicted_img = Image.fromarray(reshaped, "RGB")
             predicted_img.save(folder_path + 'predicted.png')

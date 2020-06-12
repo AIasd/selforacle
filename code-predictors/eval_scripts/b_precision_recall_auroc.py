@@ -36,17 +36,18 @@ AUROC_CALC_SAMPLING_FACTOR = 20  # 1 = No Sampling, n = 1/n of the losses are co
 # }
 #
 # SEQ_THRESHOLDS = {
-#     "lstm": {"0.68": 0.03967471005673909, "0.9": 0.04960214235753555, "0.95": 0.054508963524284165,
-#              "0.99": 0.0645317369955604, "0.999": 0.07707193970593226, "0.9999": 0.08845992912613872,
-#              "0.99999": 0.0991450074191446}
+#     "lstm": {'0.68': 0.09535318417671883, '0.9': 0.09541388244799018, '0.95': 0.09544098633416466, '0.99': 0.09549184255937669, '0.999': 0.0955488685851828, '0.9999': 0.09559582604247818, '0.99999': 0.0956366042802918}
 # }
 
 # modification
-THRESHOLDS = {
-    "sae": {'0.68': 1.375287602013875, '0.9': 3.207184102241539, '0.95': 4.355131312532284, '0.99': 7.0980063251986945, '0.999': 11.120565041690373, '0.9999': 15.202453281011142, '0.99999': 19.318228468598107}
-
-    }
-SEQ_THRESHOLDS = {}
+# THRESHOLDS = {
+#     "sae": {'0.68': 0.3456492862822983, '0.9': 0.5174489463818411, '0.95': 0.60893382888062, '0.99': 0.8064532653258628, '0.999': 1.0695763031307504, '0.9999': 1.320407237632321, '0.99999': 1.5638745001648373}
+#
+#     }
+THRESHOLDS = { }
+SEQ_THRESHOLDS = {
+    "lstm": {'0.68': 0.09535318417671883, '0.9': 0.09541388244799018, '0.95': 0.09544098633416466, '0.99': 0.09549184255937669, '0.999': 0.0955488685851828, '0.9999': 0.09559582604247818, '0.99999': 0.0956366042802918}
+}
 
 
 logger = logging.Logger("Calc_Precision_Recall")
@@ -61,10 +62,11 @@ def calc_precision_recall(simulator):
     db = Database(name=db_name, delete_existing=False)
     eval_prec_recall.remove_all_from_prec_recall(db=db)
 
+    print('single')
     for ad_name, ad_thresholds in THRESHOLDS.items():
         _eval(ad_name=ad_name, ad_thresholds=ad_thresholds, db=db)
     db.commit()
-
+    print('seq')
     for ad_name, ad_thresholds in SEQ_THRESHOLDS.items():
         _eval(ad_name=ad_name, ad_thresholds=ad_thresholds, db=db)
     db.commit()
@@ -116,12 +118,7 @@ def calc_auroc_and_auc_prec_recall(db: Database, ad_name: str) -> Tuple[float, f
         if i % 100 == 0:
             logger.info("---> " + str(i) + " out of " + str(len(losses_list)))
         # Temporary, non persisted precision_recall_analysis to calculate TPR and FPR
-        precision_recall_analysis = create_precision_recall_analysis(ad_name=ad_name,
-                                                                     auroc=None,
-                                                                     auc_prec_recall=None,
-                                                                     db=db,
-                                                                     threshold=loss,
-                                                                     threshold_type=None)
+        precision_recall_analysis = create_precision_recall_analysis(ad_name=ad_name, auroc=None, auc_prec_recall=None, db=db, threshold=loss, threshold_type=None)
 
         fpr = precision_recall_analysis.false_positive_rate
         tpr = precision_recall_analysis.recall

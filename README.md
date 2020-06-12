@@ -107,18 +107,29 @@ make changes in the global image dimensions variables in code-predictor/utils.
 make changes in code-predictors/detectors/single_image_based_detectors/abs_single_image_autoencoder.py for selecting training data.
 
 make changes in code-predictors/evaluation_runner.py for selecting testing data.
-### Train an anomaly detector
+### Training an anomaly detector
+In 2020_CARLA_challenge repo, run
 ```
-python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_autopilot' -sim carla_099
+python process_collected_data.py
+```
+In the selforacle repo, run
+```
+python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_autopilot' -sim carla_099 -trs=-1
 ```
 ### Testing an anomaly detector
+In 2020_CARLA_challenge repo, run
+```
+python process_collected_data.py
+```
+In the selforacle repo, run
+
 ```
 python code-predictors/evaluation_runner.py -sim carla_099
 python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_099
 python code-predictors/eval_scripts/b_precision_recall_auroc.py -sim carla_099
 ```
 
-## Pre-process data for our detection method
+## Pre-processing data for our detection method
 In the repo 2020_CARLA_challenge
 ```
 python process_collected_data.py
@@ -128,6 +139,18 @@ In the repo selforacle
 ```
 python code-predictors/evaluation_runner.py -sim carla_099 -m labeling
 python code-predictors/eval_scripts/a_set_true_labels.py -sim carla_099
+```
+
+
+
+### Extract feature vectors
+After the previous steps of "Training an anomaly detector" and "Pre-processing data for our detection method", in the selforacle repo, run
+```
+python code-predictors/evaluation_runner.py -sim carla_099
+```
+In the repo 2020_CARLA_challenge, run
+```
+python process_feature_vectors.py
 ```
 
 

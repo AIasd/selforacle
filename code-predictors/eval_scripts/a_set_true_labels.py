@@ -59,21 +59,18 @@ def set_true_labels(simulator):
         logger.info("labelling windows for setting " + str(setting.id))
         current_window_count = 0
 
+        print('single')
         current_ad_type = "single-img"
         single_img_entries = eval_single_img_distances.load_all_for_setting(db, setting_id=setting.id)
-
-
-
-
         current_window_count = _set_true_labels(entries=single_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type, current_window_count=current_window_count, db=db, driving_log=driving_log)
-
         eval_single_img_distances.update_true_label_on_db(db=db, records=single_img_entries)
 
+
+        print('seq')
         current_ad_type = "seq"
-        single_img_entries = eval_seq_img_distances.load_all_for_setting(db, setting_id=setting.id)
-        _set_true_labels(entries=single_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type,
-                         current_window_count=current_window_count, db=db, driving_log=driving_log)
-        eval_seq_img_distances.update_true_label_on_db(db=db, records=single_img_entries)
+        seq_img_entries = eval_seq_img_distances.load_all_for_setting(db, setting_id=setting.id)
+        _set_true_labels(entries=seq_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type, current_window_count=current_window_count, db=db, driving_log=driving_log)
+        eval_seq_img_distances.update_true_label_on_db(db=db, records=seq_img_entries)
 
     db.commit()
 
@@ -189,11 +186,7 @@ def _detect_and_store_main_blocks(entries, current_setting_id: int, current_ad_t
         if directly_normal:
             directly_normal = False
             anomaly_end_exc = MAX_CUT_END_LENGTH
-        window_count = attempt_to_set_normal_windows(entries=entries, anomaly_end_exc=anomaly_end_exc,
-                                                     window_count=window_count,
-                                                     setting_id=current_setting_id,
-                                                     ad_type=current_ad_type,
-                                                     db=db)
+        window_count = attempt_to_set_normal_windows(entries=entries, anomaly_end_exc=anomaly_end_exc, window_count=window_count, setting_id=current_setting_id, ad_type=current_ad_type, db=db)
     return window_count
 
 

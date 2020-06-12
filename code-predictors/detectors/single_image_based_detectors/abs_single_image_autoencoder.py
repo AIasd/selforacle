@@ -76,8 +76,9 @@ class AbstractSingleImageAD(AnomalyDetector, ABC):
                 are_crashes = data_df['Crashed'].values
             else:
                 # TBD: change this
-                weather_indexes = [19]
-                route_indexes = [16, 26, 36]
+                weather_indexes = [15]
+                route_indexes = [i for i in range(30)]
+                route_indexes.remove(13)
                 for weather in weather_indexes:
                     for route in route_indexes:
                         route_str = str(route)

@@ -72,11 +72,10 @@ def load_or_train_model(args, data_dir, model_name) -> AnomalyDetector:
     # Load the image paths in a form suitable for the AD (sequence or single-image)
     #       Indicate whether this models requires special TD size
     restrict_size = args.train_abs_size_models.count(model_name) > 0
-    # TODO This is inefficient. Training data should only be loaded if model not yet trained. Move this to train_model mthod
-    x_train, y_train = anomaly_detector.load_img_paths(restrict_size=restrict_size, data_dir=data_dir, eval_data_mode=False)
+
 
     # Load previously trained model or train it now
-    anomaly_detector.load_or_train_model(x_train=x_train, y_train=y_train, data_dir=data_dir)
+    anomaly_detector.load_or_train_model(restrict_size=restrict_size, data_dir=data_dir)
 
     # Sanity check for loss calculator
     # anomaly_detector.calc_losses(x_train[:200], y_train[:200], data_dir=data_dir)

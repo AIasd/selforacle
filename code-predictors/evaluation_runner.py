@@ -28,9 +28,9 @@ train_args.always_calc_thresh = False
 logger = logging.Logger("main")
 utils_logging.log_info(logger)
 # modification: ['SAE', "VAE", 'CAE', "DAE", "DEEPROAD"] -> ['SAE']
-SINGLE_IMAGE_ADS = ['SAE']
+SINGLE_IMAGE_ADS = []
 # modification: ["IMG-LSTM"] -> []
-SEQUENCE_BASED_ADS = []
+SEQUENCE_BASED_ADS = ['IMG-LSTM']
 if train_args.simulator == 'udacity':
     # modification: ["COMMAAI"] -> ["EPOCH"]
     EVAL_AGENTS = ["EPOCH"]
@@ -53,8 +53,8 @@ elif train_args.simulator == 'carla_096':
     EVAL_WEATHER = ["N/A"]
 elif train_args.simulator == 'carla_099':
     EVAL_AGENTS = ["LBC"]
-    weather_indexes = [0]
-    route_indexes = [i for i in range(76)]
+    weather_indexes = [15]
+    route_indexes = [i for i in range(10, 15)]
     # index 13: scenario cannot be set up successfully
     route_indexes.remove(13)
 
@@ -100,25 +100,24 @@ def main():
         # Evaluate for Single Image Based
         for i, setting in enumerate(settings):
             data_dir = eval_dir + '/' + setting.get_folder_name(train_args.simulator)
+
             if train_args.simulator == 'udacity':
                 raw_data_dir = data_dir
             else:
                 raw_data_dir = eval_dir
             if len(single_img_based_ads) > 0:
-                handle_single_image_based_ads(db=db, data_dir=data_dir, setting=setting,
-                                              single_img_based_ads=single_img_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir, mode=mode)
+                handle_single_image_based_ads(db=db, data_dir=data_dir, setting=setting, single_img_based_ads=single_img_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir, mode=mode)
 
             if len(sequence_based_ads) > 0:
-                handle_sequence_based_ads(db=db, data_dir=data_dir, setting=setting,
-                                          sequence_based_ads=sequence_based_ads, simulator=train_args.simulator)
+                handle_sequence_based_ads(db=db, data_dir=data_dir, setting=setting, sequence_based_ads=sequence_based_ads, simulator=train_args.simulator, raw_data_dir=raw_data_dir)
+
+        print('single_img_entries')
         get_current_single_img_entries_num(db, 3000)
         get_current_single_img_entries_num(db, 3001)
         get_current_single_img_entries_num(db, 3002)
-        get_current_single_img_entries_num(db, 3003)
-        get_current_single_img_entries_num(db, 3004)
-        get_current_single_img_entries_num(db, 3005)
 
-def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulator):
+
+def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulator, raw_data_dir):
     ad_distances = {}
     frame_ids = None
     are_crashes = None
@@ -126,7 +125,7 @@ def handle_sequence_based_ads(db, data_dir, setting, sequence_based_ads, simulat
         logger.info("Calculating losses for " + setting.get_folder_name(simulator) + " with ad  " + ad_name)
         x, y, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
         assert len(x) == len(y) == len(frm_ids) == len(crashes)
-        distances = ad.calc_losses(inputs=x, labels=y, data_dir=data_dir)
+        distances = ad.calc_losses(inputs=x, labels=y, data_dir=raw_data_dir)
         ad_distances[ad_name] = distances
         if frame_ids is None:
             frame_ids = frm_ids
@@ -139,22 +138,27 @@ def handle_single_image_based_ads(db, data_dir, setting, single_img_based_ads, s
     ad_distances = {}
     frame_ids = None
     are_crashes = None
+    setting_name = setting.get_folder_name(simulator)
+
     for ad_name, ad in single_img_based_ads.items():
-        logger.info("Calculating losses for " + setting.get_folder_name(simulator) + " with ad  " + ad_name)
+        logger.info("Calculating losses for " + setting_name + " with ad  " + ad_name)
+
         x, frm_ids, crashes = ad.load_img_paths(data_dir=data_dir, restrict_size=False, eval_data_mode=True)
+
 
         assert len(x) == len(frm_ids) == len(crashes)
         if mode == 'labeling':
             distances = np.zeros_like(x)
         else:
-            distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir)
-            print('+'*200)
+            case_name = setting_name+'/'+ad_name
+            distances = ad.calc_losses(inputs=x, labels=None, data_dir=raw_data_dir, case_name=case_name)
+
 
         ad_distances[ad_name] = distances
         if frame_ids is None:
             frame_ids = frm_ids
             are_crashes = crashes
-    logger.info("Done. Now storing single img based eval for setting " + setting.get_folder_name())
+    logger.info("Done. Now storing single img based eval for setting " + setting_name)
     store_losses(setting=setting, per_ad_distances=ad_distances, row_ids=frame_ids, are_crashes=are_crashes, db=db)
 
 
@@ -203,9 +207,7 @@ def store_losses(setting, per_ad_distances, row_ids, are_crashes, db: Database):
         if "DEEPROAD" in per_ad_distances:
             deeproad_loss = per_ad_distances["DEEPROAD"][i]
             deeproad_loss = deeproad_loss.item()
-        to_store = SingleImgDistance(setting_id=setting_id, row_id=row_id, is_crash=is_crash, vae_loss=vae_loss,
-                                     cae_loss=cae_loss, dae_loss=dae_loss, sae_loss=sae_loss,
-                                     deeproad_loss=deeproad_loss)
+        to_store = SingleImgDistance(setting_id=setting_id, row_id=row_id, is_crash=is_crash, vae_loss=vae_loss, cae_loss=cae_loss, dae_loss=dae_loss, sae_loss=sae_loss, deeproad_loss=deeproad_loss)
         to_store.insert_into_db(db)
         if i % 1000:
             db.commit()

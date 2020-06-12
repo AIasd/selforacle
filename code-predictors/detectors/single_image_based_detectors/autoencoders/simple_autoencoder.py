@@ -19,7 +19,7 @@ class SimpleAutoencoder(AbstractSingleImageAD, AnomalyDetector):
 
     def _create_keras_model(self, args=None):
         model = Sequential()
-        model.add(Dense(64, activation='relu', input_shape=INPUT_SHAPE, activity_regularizer=regularizers.l1(10e-9)))
+        model.add(Dense(64, activation='relu', input_shape=INPUT_SHAPE, activity_regularizer=regularizers.l1(10e-9), name="layer_encoder"))
         model.add(Dense(IMAGE_HEIGHT * IMAGE_WIDTH * IMAGE_CHANNELS, activation='sigmoid'))
         return model
 

@@ -33,9 +33,7 @@ class SeqBasedDistance:
 
 
 def load_all_for_setting(db: Database, setting_id: int) -> List[SeqBasedDistance]:
-    cursor = db.cursor.execute('select * from sequence_based_distances where setting_id=? ' +
-                               'order by row_id',
-                               (setting_id,))
+    cursor = db.cursor.execute('select * from sequence_based_distances where setting_id=? ' + 'order by row_id', (setting_id,))
     var = cursor.fetchall()
     result = []
     for db_record in var:
@@ -46,8 +44,7 @@ def load_all_for_setting(db: Database, setting_id: int) -> List[SeqBasedDistance
         elif int_is_crash != 0:
             logger.error("Unknown is_crash bool encoding")
             exit(1)
-        distance_object = SeqBasedDistance(setting_id=db_record[0], row_id=db_record[1], is_crash=is_crash,
-                                           lstm_loss=db_record[3])
+        distance_object = SeqBasedDistance(setting_id=db_record[0], row_id=db_record[1], is_crash=is_crash, lstm_loss=db_record[3])
         result.append(distance_object)
     return result
 
@@ -59,5 +56,3 @@ def update_true_label_on_db(db: Database, records: List[SeqBasedDistance]):
                       'where main.sequence_based_distances.setting_id = ?' +
                       ' and main.sequence_based_distances.row_id = ? ',
                       insertable)
-
-

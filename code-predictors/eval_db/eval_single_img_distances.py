@@ -47,9 +47,7 @@ class SingleImgDistance:
 
 
 def load_all_for_setting(db: Database, setting_id: int) -> List[SingleImgDistance]:
-    cursor = db.cursor.execute('select * from single_image_based_distances where setting_id=? ' +
-                               'order by row_id',
-                               (setting_id,))
+    cursor = db.cursor.execute('select * from single_image_based_distances where setting_id=? ' + 'order by row_id', (setting_id,))
     var = cursor.fetchall()
     result = []
     # addition
