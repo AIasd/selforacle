@@ -42,9 +42,7 @@ class Database:
         self.cursor.execute('''CREATE TABLE settings (
                     id INTEGER PRIMARY KEY ,
                     agent text NOT NULL ,
-                    track INTEGER NOT NULL ,
-                    time text NOT NULL,
-                    weather text NOT NULL)''')
+                    track INTEGER NOT NULL )''')
 
     def create_table_single_img_distances(self):
         self.cursor.execute('''create table single_image_based_distances
@@ -125,7 +123,7 @@ class Database:
                 constraint windows_pk
                     primary key (setting, window_id, ad_name)
             );
-            
+
 
         ''')
         self.cursor.execute('''

@@ -1,7 +1,55 @@
+'''
+* causal evaluation pre-implementing
+* fix to support run multiple route consecutively
+* read RL paper
+* read Rep class paper
+
+
+* reformat customized data and run action based model; apply the trained encoder to train another model for predicting misbehaviors
+* clean up data / code and share with Conor; ask him to 1.analyze correlation between variables (control, speed) and normal / anormaly frames 2.ask him to try to rewrite the labeling normal / anormaly script and then rerun the baseline in a non-database fashion? 3.potentially ask him to play with the model and data, insight on data and give feedback
+
+
+* add contrastive loss into the training
+
+
+* use customized data for training encoder for action based (probably need to understand their pipeline code first).
+
+* collect data using expert driver and remove those redundant data / misbehavior data, then train another encoder.
+
+* (record affordance info and try to predict them).
+* add more heads and check performance change.
+
+* integrate pipeline with misbehavior prediction and check performance.
+
+
+
+
+* remove those frames where the car barely moves
+* build encoder that predict control
+* make prediction scenario even simpler and concatenate more information (speed, control) to the simple CNN classifier
+
+* reimplement the labeling procedure? reimplement the baseline measure since labeling is reimplemented without relying on the sqlite database?
+* get simple_detector work (try limiting type of crash as well as removing redundant frames)
+* try baseline on the updated data
+* try to somehow unify the pipeline
+* update readme for easier use
+* fix simulator crush error after 30-50 simulations
+* support adding background ped
+* avoid generating other objects too close to the ego car for causal inference case; let the other car to follow traffic rules when waypoint follower is invoked; measure ego car width and length
+
+
+* process data (train/test split, complete data, remove redundant repetitions) to make performance non-trivial
+* simple classifier on it
+* try the proposed model
+* try more fine-grained output
+
+* detection use all three front cameras
+'''
+
 import logging
 import os
-
-import numpy
+import random
+import numpy as np
 
 import utils
 import utils_args
@@ -43,23 +91,16 @@ def dataset_name_from_dir(data_dir):
 
 
 def main():
+    np.random.seed(0)
     args = utils_args.specify_args()
-    if args.gray_scale:
-        # TODO Remove or complete gray scale implementation
-        logger.error("Gray Scale is not yet ready to be used")
-        exit(1)
-        utils.IMAGE_CHANNELS = 1
-
-    numpy.random.seed(args.random_state)
-
     utils_args.store_and_print_params(args)
 
-    for data_dir in args.data_dir:
-        for model_name in args.model_name:
-            print("\n --- MODEL NAME: " + model_name + " for dataset " + data_dir + " --- \n")
-            # Load the correct anomaly detector class
-            load_or_train_model(args, data_dir, model_name)
-            print("\n --- COMPLETED  " + model_name + " for dataset " + data_dir + " --- \n")
+
+    for model_name in args.model_name:
+        print("\n --- MODEL NAME: " + model_name + " for dataset " + data_dir + " --- \n")
+        # Load the correct anomaly detector class
+        load_or_train_model(args, args.data_dir, model_name)
+        print("\n --- COMPLETED  " + model_name + " for dataset " + data_dir + " --- \n")
 
     print("\ndone")
     # evaluate_optically_img_loss(trained=autoencoder, x_test=X_test, y_test=y_test, args=args)

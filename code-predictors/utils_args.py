@@ -16,29 +16,13 @@ utils_logging.log_info(logger)
 
 
 # addition
-def get_args_serialization_path(simulator):
+def get_args_serialization_path():
     # TBD: changed to be not-hardcoded
-    if simulator == 'udacity':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/udacity_training-args.pkl"
-    elif simulator == 'carla_096':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/carla_096_training-args.pkl"
-    elif simulator == 'carla_099':
-        return "/home/zhongzzy9/Documents/self-driving-car/misbehavior_prediction/models/trained-anomaly-detectors/carla_099_training-args.pkl"
+    return "../models/trained-anomaly-detectors/carla_099_training-args.pkl"
 
 def store_and_print_params(args):
     _print_parameters(args)
-    # Check consistency with stored args
-    path = get_args_serialization_path(args.simulator)
-    # if os.path.exists(path):
-    #     stored_args = load_train_args(args.simulator)
-    #     if not args == stored_args:
-    #         logger.error(
-    #             "The stored settings " + path
-    #             + " do not match the specified args. "
-    #             + "If this is intended, please delete the stored args. "
-    #             + "We recommend also deleting the previously trained models.")
-    # else:
-    # overwrite args every time
+    path = get_args_serialization_path()
     _write_train_args(args=args)
 
 
@@ -50,11 +34,17 @@ def _print_parameters(args):
         print('{:<20} := {}'.format(key, value))
     print('-' * 30)
 
+def s2b(s):
+    """
+    Converts a string to boolean value
+    """
+    s = s.lower()
+    return s == 'true' or s == 'yes' or s == 'y' or s == '1'
 
 def specify_args():
     parser = argparse.ArgumentParser(description='Behavioral Cloning Training Program')
-    parser.add_argument('-d', nargs='+', help='data directory', dest='data_dir', type=str,
-                        default=['../datasets/dataset5'])
+    parser.add_argument('-d', help='data directory', dest='data_dir', type=str,
+                        default='/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized')
     # modification
     parser.add_argument('-trs', help='restrict train set size, -1 if none', dest='train_abs_size', type=int,
                         default=1000)
@@ -65,24 +55,22 @@ def specify_args():
     parser.add_argument('-o', help='save best models only', dest='save_best_only', type=s2b, default='true')
     parser.add_argument('-m', nargs='+', help='model name', dest='model_name', type=str,
                         # default=MODELS) #modification
-                        default=['IMG-LSTM'])
-    parser.add_argument('-r', help='random state', dest='random_state', type=int, default=0)
+                        default=['SAE'])
+    # parser.add_argument('-r', help='random state', dest='random_state', type=int, default=0)
     parser.add_argument('-t', help="force recalc of thresholds on model reload", dest="always_calc_thresh", type=s2b, default=True)
     parser.add_argument('-sl', help='sequence length', dest='sequence_length', type=int, default=30)
     parser.add_argument('-dl', help='delete trained model', dest='delete_trained', type=s2b, default='true')
-    parser.add_argument('-g', help='gray scale image', dest='gray_scale', type=s2b, default='false')
+    # parser.add_argument('-g', help='gray scale image', dest='gray_scale', type=s2b, default='false')
     # addition
-    parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+    # parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+    # parser.add_argument('-weather', nargs='+', help='weather_indexes', dest='weather_indexes', type=int, default=[15])
+    # parser.add_argument('-route', nargs='+', help='route_indexes', dest='route_indexes', type=int, default=[i for i in range(30)])
     args = parser.parse_args()
     return args
 
-def s2b(s):
-    s = s.lower()
-    return s == 'true' or s == 'yes' or s == 'y' or s == '1'
 
-
-def load_train_args(simulator):
-    path = get_args_serialization_path(simulator)
+def load_train_args():
+    path = get_args_serialization_path()
     with open(path, 'rb') as input:
         if os.path.getsize(path) > 0:
             return pickle.load(input)
@@ -91,6 +79,6 @@ def load_train_args(simulator):
 
 
 def _write_train_args(args) -> None:
-    path = get_args_serialization_path(args.simulator)
+    path = get_args_serialization_path()
     with open(path, 'wb+') as output:
         pickle.dump(args, output, pickle.HIGHEST_PROTOCOL)

@@ -30,8 +30,9 @@ class AutoencoderBatchGenerator(Sequence):
         for i, path in enumerate(batch_paths):
             # addition: hack
 
-            if isinstance(path, str) and path.startswith('collected_data/'):
-                path = path[len('collected_data/'):]
+            if isinstance(path, str) and path.startswith('collected_data_customized/'):
+                path = path[len('collected_data_customized/'):]
+
             # apply augmentation to 60% of the images, if enabled
             if APPLY_DATA_AUGMENTATION and np.random.rand() < 0.6:
                 # data augmentation

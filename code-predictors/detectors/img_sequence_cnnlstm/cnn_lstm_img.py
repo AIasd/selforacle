@@ -68,7 +68,7 @@ class CnnLstmImg(AnomalyDetector):
         print("don't use this here")
         exit(1)
 
-    def load_img_paths(self, data_dir: str, restrict_size: bool, eval_data_mode: bool):
+    def load_img_paths(self, data_dir: str, restrict_size: bool, eval_data_mode: bool, weather_indexes: list=[], route_indexes: list=[]):
 
         x_center = None
         frame_ids = None  # Only used in eval data mode
@@ -101,10 +101,6 @@ class CnnLstmImg(AnomalyDetector):
                 frame_ids = data_df['FrameId'].values
                 are_crashes = data_df['Crashed'].values
             else:
-                # TBD: change this
-                weather_indexes = [15]
-                route_indexes = [i for i in range(30)]
-                route_indexes.remove(13)
                 for weather in weather_indexes:
                     for route in route_indexes:
                         route_str = str(route)

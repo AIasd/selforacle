@@ -9,7 +9,7 @@ from eval_db.database import Database
 from eval_scripts.db_path import get_db_path
 
 from evaluation_runner import get_current_single_img_entries_num
-
+# addition
 import argparse
 import pandas as pd
 
@@ -28,10 +28,10 @@ HEALING_LABEL = "healing"
 MISBEHAVIOR_LABEL = "misbehavior"
 
 # scale down by multiplied with 1/10
-REACTION_TIME = 10 # 50->10
-ANOMALY_WINDOW_LENGTH = 10 # 30->10
-NORMAL_WINDOW_LENGTH = ANOMALY_WINDOW_LENGTH # 30->10
-HEALING_TIME = 0 # 60->0
+REACTION_TIME = 15 # 50->15
+ANOMALY_WINDOW_LENGTH = 20 # 30->20
+NORMAL_WINDOW_LENGTH = ANOMALY_WINDOW_LENGTH # 30->20
+HEALING_TIME = 30 # 60->30
 MAX_CUT_END_LENGTH = REACTION_TIME + ANOMALY_WINDOW_LENGTH
 # length of normal-to-crash is REACTION_TIME + ANOMALY_WINDOW_LENGTH (current logic relies on this)
 
@@ -39,14 +39,24 @@ logger = logging.Logger("set_truelabels")
 utils_logging.log_info(logger)
 
 
-def set_true_labels():
-    db = Database(name=get_db_path(), delete_existing=False)
+def set_true_labels(simulator):
+    db = Database(name=get_db_path(simulator), delete_existing=False)
 
     eval_window.remove_all_stored_records(db=db)
     settings = eval_setting.get_all_settings(db)
 
+
+    tmp = []
     for setting in settings:
-        driving_log = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized/causal_2/"+str(setting.track)+'/driving_log.csv'
+        tmp.append(setting.track)
+    print(sorted(tmp))
+
+    for setting in settings:
+
+        driving_log = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized/"+setting.track+'/driving_log.csv'
+
+
+
 
         logger.info("labelling windows for setting " + str(setting.id))
         current_window_count = 0
@@ -59,10 +69,10 @@ def set_true_labels():
 
 
         print('seq')
-        # current_ad_type = "seq"
-        # seq_img_entries = eval_seq_img_distances.load_all_for_setting(db, setting_id=setting.id)
-        # _set_true_labels(entries=seq_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type, current_window_count=current_window_count, db=db, driving_log=driving_log)
-        # eval_seq_img_distances.update_true_label_on_db(db=db, records=seq_img_entries)
+        current_ad_type = "seq"
+        seq_img_entries = eval_seq_img_distances.load_all_for_setting(db, setting_id=setting.id)
+        _set_true_labels(entries=seq_img_entries, current_setting_id=setting.id, current_ad_type=current_ad_type, current_window_count=current_window_count, db=db, driving_log=driving_log)
+        eval_seq_img_distances.update_true_label_on_db(db=db, records=seq_img_entries)
 
     db.commit()
 
@@ -113,14 +123,12 @@ def _reverse_and_detect_and_ignore_last_images(entries) -> bool:
         elif entry.true_label == HEALING_LABEL:
             # Reached healing period of last misbehavior of the stream (looked at in natural order)
             break
-        # modification:
-        # elif entry.true_label == MISBEHAVIOR_LABEL and is_last_entry:
-        elif entry.true_label == MISBEHAVIOR_LABEL:
+        elif entry.true_label == MISBEHAVIOR_LABEL and is_last_entry:
             # Last entry happens to be a misbehavior
             break
         else:
             logger.error(
-                "At this point of the label setting, there should only be None, healing or misbehavior (if last frame) labels but the label is "+entry.true_label)
+                "At this point of the label setting, there should only be None, healing or misbehavior (if last frame) labels")
             assert False
         is_last_entry = False
     return False
@@ -155,8 +163,7 @@ def _get_window_idx_or_mark_gap(start_inclusive, window_size, entries) -> (bool,
 def _detect_and_store_main_blocks(entries, current_setting_id: int, current_ad_type: str, window_count: int,
                                   directly_normal: bool, db: Database):
     # Assert we're still in a reversed image stream
-    # modification 0 -> 1
-    if len(entries) > 1:
+    if len(entries) > 0:
         assert entries[0].row_id > entries[1].row_id
     # Start setting the windows
     first_after_misbehaviour_series = _first_after_misbehavior_series(entries=entries)
@@ -168,7 +175,8 @@ def _detect_and_store_main_blocks(entries, current_setting_id: int, current_ad_t
     for right_after_misbehaviour_series in first_after_misbehaviour_series:
         if not directly_normal:
             # Set reaction window
-            abort, reaction_end_excl = attempt_to_set_reaction_window(entries=entries, start_inc=right_after_misbehaviour_series)
+            abort, reaction_end_excl = attempt_to_set_reaction_window(entries=entries,
+                                                                      start_inc=right_after_misbehaviour_series)
             if abort:
                 continue
             # Set anomaly window
@@ -294,7 +302,6 @@ def _check_frame_length(entries, label, window_length, allow_subsequent_same=Fal
 
 
 def _check_order_of_labels(entries, driving_log):
-
     last_label = ""
     data_df = pd.read_csv(driving_log)
 
@@ -314,7 +321,7 @@ def _check_order_of_labels(entries, driving_log):
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL
             behavior_name = MISBEHAVIOR_LABEL
-            # behavior = 1
+            behavior = 1
         elif entry.true_label == REACTION_LABEL:
             assert last_label == ANOMALY_LABEL \
                    or last_label == REACTION_LABEL \
@@ -323,34 +330,27 @@ def _check_order_of_labels(entries, driving_log):
             behavior_name = REACTION_LABEL
 
         elif entry.true_label == ANOMALY_LABEL:
-            # modification: add MISBEHAVIOR_LABEL here
             assert last_label == NORMAL_LABEL \
                    or last_label == LABEL_GAP \
                    or last_label == HEALING_LABEL \
-                   or last_label == ANOMALY_LABEL \
-                   or last_label == MISBEHAVIOR_LABEL, last_label
+                   or last_label == ANOMALY_LABEL
             behavior_name = ANOMALY_LABEL
-            behavior = 1
+            # behavior = 1
         elif entry.true_label == HEALING_LABEL:
             assert last_label == MISBEHAVIOR_LABEL \
                    or last_label == HEALING_LABEL
             behavior_name = HEALING_LABEL
         elif entry.true_label == IGNORE_END_OF_STREAM_LABEL:
 
-            # modification: add LABEL_GAP here
-            # modification: add MISBEHAVIOR_LABEL here
+            # add LABEL_GAP here
             assert last_label == HEALING_LABEL \
                    or last_label == NORMAL_LABEL \
                    or last_label == IGNORE_END_OF_STREAM_LABEL \
-                   or last_label == LABEL_GAP \
-                   or last_label == MISBEHAVIOR_LABEL
+                   or last_label == LABEL_GAP
             behavior_name = IGNORE_END_OF_STREAM_LABEL
-            behavior = 0
         elif entry.true_label == LABEL_GAP:
-            # modification: add label_misbehavior here
             assert last_label == LABEL_GAP \
-                   or last_label == HEALING_LABEL \
-                   or last_label == MISBEHAVIOR_LABEL
+                   or last_label == HEALING_LABEL
             behavior_name = LABEL_GAP
         elif entry.true_label == NORMAL_LABEL:
             behavior_name = NORMAL_LABEL
@@ -358,12 +358,11 @@ def _check_order_of_labels(entries, driving_log):
         last_label = entry.true_label
         behaviors.append(behavior)
         behaviors_names.append(behavior_name)
-
     if len(behaviors) ==  len(data_df['center']):
         data_df['behaviors'] = behaviors
         data_df['behaviors_names'] = behaviors_names
         data_df.to_csv(driving_log, index=False)
-    print(driving_log, len(behaviors), len(data_df['center']))
+
 
 def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, current_window_count: int, db: Database, driving_log: str):
     print('entries start :', len(entries))
@@ -371,7 +370,11 @@ def _set_true_labels(entries, current_setting_id: int, current_ad_type: str, cur
     _detect_misbehaviors(entries)
     _detect_healing(entries)
     directly_normal = _reverse_and_detect_and_ignore_last_images(entries)
-    current_window_count = _detect_and_store_main_blocks(entries, current_setting_id=current_setting_id, current_ad_type=current_ad_type, window_count=current_window_count, directly_normal=directly_normal, db=db)
+    current_window_count = _detect_and_store_main_blocks(entries, current_setting_id=current_setting_id,
+                                                         current_ad_type=current_ad_type,
+                                                         window_count=current_window_count,
+                                                         directly_normal=directly_normal,
+                                                         db=db)
     _integrity_checks_after_calc(entries, driving_log)
     print('entries end :', len(entries))
     return current_window_count
@@ -387,4 +390,9 @@ def _detect_next_misbehavior(entries, start_index_inc) -> int:
 
 
 if __name__ == '__main__':
-    set_true_labels()
+    parser = argparse.ArgumentParser(description='a_set_true_labels')
+    parser.add_argument('-sim', help='simulator used to generate data', dest='simulator', type=str, default='udacity')
+
+
+    args = parser.parse_args()
+    set_true_labels(args.simulator)

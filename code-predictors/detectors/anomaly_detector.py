@@ -65,6 +65,7 @@ class AnomalyDetector(abc.ABC):
 
     def load_or_train_model(self, restrict_size: int, data_dir: str):
         model_class = self.__class__.__name__.lower()
+
         dataset_name = os.path.basename(os.path.normpath(data_dir))
         model_name_on_disk = "../models/trained-anomaly-detectors/" + dataset_name + "-" + model_class + ".h5"
         if os.path.exists(model_name_on_disk) and self.args.delete_trained:
@@ -78,8 +79,7 @@ class AnomalyDetector(abc.ABC):
 
                 self._treat_model_loading_problem(data_dir, model_class, model_name_on_disk, x_train, y_train)
             if self.args.always_calc_thresh:
-                self._calc_and_store_thresholds(x_train=x_train, y_train=y_train, data_dir=data_dir,
-                                                model_class=model_class)
+                self._calc_and_store_thresholds(x_train=x_train, y_train=y_train, data_dir=data_dir, model_class=model_class)
             else:
                 self._load_thresholds(data_dir, model_class)
         else:
@@ -146,11 +146,8 @@ class AnomalyDetector(abc.ABC):
         feature_extractor = keras.Model(self.keras_model.input, self.keras_model.get_layer("layer_encoder").output)
 
 
-
-
-
-
         # Note: This would fail for deeproad. Hence, deeproad will override this method
+        print('-'*100, inputs.shape)
         batch_generator = self.get_batch_generator(x=inputs, y=labels, data_dir=data_dir)
 
         prediction_batch_size = batch_generator.get_batch_size()
@@ -175,7 +172,7 @@ class AnomalyDetector(abc.ABC):
                 logger.info("predicting batch "+ str(index) + " out of " + str(batch_generator.__len__()))
         if len(case_name) > 0:
             features = np.concatenate(features_list, axis=0)
-            np.save(data_dir+'/'+case_name+'_features', features)
+            np.save(data_dir+'/'+case_name+'_'+self.name+'_features', features)
 
         # PRINT: sorted evaluation loss
         # loss_list = [(loss, i) for i, loss in enumerate(result)]
@@ -219,7 +216,7 @@ class AnomalyDetector(abc.ABC):
 
     def _calc_and_store_thresholds(self, x_train: numpy.array, y_train: numpy.array, data_dir: str, model_class: str):
         logger.info("Calculating losses...")
-        losses = self.calc_losses(inputs=x_train, labels=y_train, data_dir=data_dir)
+        losses = self.calc_losses(inputs=x_train, labels=y_train, data_dir=data_dir, case_name='train')
 
 
 

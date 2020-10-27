@@ -15,3 +15,5 @@ code-predictors/eval_scripts/a_set_true_labels_carla.py
 code-predictors/eval_scripts/b_precision_recall_auroc_carla.py
 code-predictors/evaluation_runner_carla.py
 code-predictors/inspect_results.py
+code-predictors/customized_detectors/__pycache__/*
+code-predictors/customized_detectors/models/__pycache__/*
