@@ -46,7 +46,7 @@ def set_true_labels():
     settings = eval_setting.get_all_settings(db)
 
     for setting in settings:
-        driving_log = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized/causal_2/"+str(setting.track)+'/driving_log.csv'
+        driving_log = "/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized/customized_0/"+str(setting.track)+'/driving_log.csv'
 
         logger.info("labelling windows for setting " + str(setting.id))
         current_window_count = 0

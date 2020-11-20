@@ -21,7 +21,7 @@ In the selforacle repo, run
 python code-predictors/training_runner.py -d '/home/zhongzzy9/Documents/self-driving-car/2020_CARLA_challenge/collected_data_customized' -sim carla_099 -trs=-1
 ```
 ### Testing an anomaly detector
-In the selforacle repo, run
+In the `selforacle` repo, run
 
 ```
 python code-predictors/evaluation_runner.py
@@ -30,16 +30,16 @@ python code-predictors/eval_scripts/b_precision_recall_auroc.py
 ```
 
 ## Pre-processing data for our detection method
-In the repo 2020_CARLA_challenge
+In the `2020_CARLA_challenge` repo, customize `route_folder` of the file `process_collected_data.py` to the folder consists of data and run:
 ```
 python process_collected_data.py
 ```
 
-Customize path in the function `get_args_serialization_path` of `utils_args.py`
+In the `selforacle` repo, customize return value in the function `get_args_serialization_path` in `code-predictor/utils_args.py` (make sure the folders specified in the path all exist).
 
-In `code-predictors/evaluation_runner.py`, set data path for `eval_dir`
+In `code-predictors/evaluation_runner.py`, set data path for the variable `eval_dir`. The value of the variable `db_name` might also need to be changed when necessary (make sure the folders specified in the path all exist).
 
-In `code-predictors/a_set_true_labels.py`, set data path for `driving_log`
+In `code-predictors/eval_scripts/a_set_true_labels.py`, set data path for the variable `driving_log`.
 
 In the repo selforacle
 ```

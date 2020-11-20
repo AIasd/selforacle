@@ -45,7 +45,7 @@ SEQUENCE_BASED_ADS = []
 
 EVAL_AGENTS = ["LBC"]
 
-eval_dir = "../../2020_CARLA_challenge/collected_data_customized/causal_2"
+eval_dir = "../../2020_CARLA_challenge/collected_data_customized/customized_0"
 EVAL_TRACKS = []
 for route in sorted(os.listdir(eval_dir)):
     route_path = eval_dir+'/'+route
